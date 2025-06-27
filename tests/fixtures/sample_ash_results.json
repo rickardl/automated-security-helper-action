@@ -1,0 +1,50 @@
+{
+  "results": {
+    "bandit": {
+      "findings": [
+        {
+          "filename": "src/example.py",
+          "line_number": 10,
+          "severity": "HIGH",
+          "confidence": "HIGH",
+          "issue_type": "hardcoded_password_string",
+          "issue_text": "Possible hardcoded password",
+          "line_range": [10, 10],
+          "more_info": "https://bandit.readthedocs.io/en/latest/plugins/b105_hardcoded_password_string.html"
+        }
+      ],
+      "summary": {
+        "total": 1,
+        "high": 1,
+        "medium": 0,
+        "low": 0
+      }
+    },
+    "semgrep": {
+      "findings": [
+        {
+          "filename": "src/api.js",
+          "line_number": 25,
+          "severity": "MEDIUM",
+          "rule_id": "javascript.lang.security.audit.dangerous-innerHTML.dangerous-innerHTML",
+          "message": "Detected innerHTML usage. This could lead to XSS if user input is not sanitized.",
+          "line_range": [25, 25]
+        }
+      ],
+      "summary": {
+        "total": 1,
+        "high": 0,
+        "medium": 1,
+        "low": 0
+      }
+    }
+  },
+  "summary": {
+    "total_findings": 2,
+    "critical": 0,
+    "high": 1,
+    "medium": 1,
+    "low": 0,
+    "tools_executed": ["bandit", "semgrep"]
+  }
+}

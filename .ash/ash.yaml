@@ -1,0 +1,53 @@
+# ASH v3 Configuration Example
+# Based on actual ASH v3 configuration schema
+# Reference: https://github.com/awslabs/automated-security-helper
+
+# Scanner configuration
+scanners:
+  enabled:
+    - bandit
+    - semgrep
+    - checkov
+    - safety
+    - cfn_nag
+    - git-secrets
+
+  bandit:
+    severity_threshold: "medium"
+    confidence_threshold: "medium"
+
+  semgrep:
+    rulesets:
+      - "auto"
+      - "security"
+
+# Output configuration
+output:
+  formats:
+    - "text"
+    - "flat-json"
+    - "sarif"
+
+# Reporting configuration
+reporting:
+  severity_threshold: "medium"
+
+  # Suppressions
+  suppressions:
+    - rule_id: "bandit.B101"
+      file_patterns:
+        - "tests/**"
+      reason: "Test files may contain assert statements"
+
+# Execution configuration
+execution:
+  strategy: "parallel"
+  offline: false
+  cleanup: false
+
+# Advanced settings
+advanced:
+  debug: false
+  quiet: false
+  color: true
+  fail_on_findings: true

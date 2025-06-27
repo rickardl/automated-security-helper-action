@@ -1,0 +1,295 @@
+name: 'AWS Automated Security Helper Action'
+description: 'Comprehensive security scanning with AWS Automated Security Helper (ASH) v3 - Multi-language SAST, DAST, IaC scanning, secrets detection, and vulnerability analysis with native SARIF support and GitHub Security tab integration'
+author: 'AWS'
+branding:
+  icon: 'shield'
+  color: 'orange'
+
+inputs:
+  source-directory:
+    description: 'Path to the source code directory to scan'
+    required: false
+    default: '.'
+  output-directory:
+    description: 'Directory where scan results will be saved'
+    required: false
+    default: 'ash_output'
+  output-format:
+    description: 'Output format for scan results (text, json, or both)'
+    required: false
+    default: 'text'
+  fail-on-findings:
+    description: 'Whether to fail the action when security findings are detected'
+    required: false
+    default: 'true'
+  severity-threshold:
+    description: 'Minimum severity level to report (low, medium, high, critical)'
+    required: false
+    default: 'medium'
+  offline-mode:
+    description: 'Run in offline mode using pre-downloaded vulnerability databases'
+    required: false
+    default: 'false'
+  file-extensions:
+    description: 'Comma-separated list of file extensions to scan (e.g., py,js,tf)'
+    required: false
+    default: ''
+  exclude-patterns:
+    description: 'Comma-separated list of file patterns to exclude from scanning'
+    required: false
+    default: ''
+  preserve-reports:
+    description: 'Add timestamp to report names to avoid overwriting previous results'
+    required: false
+    default: 'false'
+  parallel-execution:
+    description: 'Enable parallel execution of security scanners for faster results'
+    required: false
+    default: 'true'
+  debug:
+    description: 'Enable debug logging for troubleshooting'
+    required: false
+    default: 'false'
+  quiet:
+    description: 'Suppress verbose output during scanning'
+    required: false
+    default: 'false'
+  sarif-output:
+    description: 'Generate SARIF output for GitHub Security tab integration'
+    required: false
+    default: 'true'
+  upload-sarif:
+    description: 'Automatically upload SARIF results to GitHub Security tab using official CodeQL action'
+    required: false
+    default: 'true'
+  sarif-category:
+    description: 'Category for SARIF upload to distinguish multiple scans'
+    required: false
+    default: 'automated-security-helper'
+  github-token:
+    description: 'GitHub token for PR comments and artifact upload (defaults to github.token)'
+    required: false
+    default: ''
+  wait-for-processing:
+    description: 'Wait for SARIF processing to complete before finishing'
+    required: false
+    default: 'true'
+  pr-comment:
+    description: 'Add inline comments to pull requests for security findings'
+    required: false
+    default: 'true'
+  pr-comment-mode:
+    description: 'PR comment mode: review (batched) or individual (immediate)'
+    required: false
+    default: 'review'
+  pr-comment-format:
+    description: 'PR comment format: sarif (enhanced) or legacy (simple)'
+    required: false
+    default: 'sarif'
+  ash-version:
+    description: 'Specific version of ASH to use (defaults to beta for v3 features)'
+    required: false
+    default: 'beta'
+  ash-mode:
+    description: 'ASH execution mode: local, container, or precommit (v3 feature)'
+    required: false
+    default: 'container'
+  custom-config:
+    description: 'Path to custom ASH configuration file'
+    required: false
+    default: ''
+  upload-artifacts:
+    description: 'Upload scan results as GitHub Actions artifacts'
+    required: false
+    default: 'true'
+  artifact-retention-days:
+    description: 'Number of days to retain uploaded artifacts'
+    required: false
+    default: '30'
+  enable-caching:
+    description: 'Enable Docker layer and basic directory caching for faster subsequent runs'
+    required: false
+    default: 'true'
+  cache-ttl:
+    description: 'Cache refresh frequency: daily, weekly, monthly'
+    required: false
+    default: 'weekly'
+  scanners:
+    description: 'Comma-separated list of specific scanners to run (defaults to all enabled scanners)'
+    required: false
+    default: ''
+  exclude-scanners:
+    description: 'Comma-separated list of scanners to exclude from execution'
+    required: false
+    default: ''
+  ignore-suppressions:
+    description: 'Ignore all suppression rules and report all findings regardless of suppression status'
+    required: false
+    default: 'false'
+  offline-semgrep-rulesets:
+    description: 'Specify Semgrep rulesets for use in ASH offline mode (e.g., p/ci, p/security-audit)'
+    required: false
+    default: 'p/ci'
+
+outputs:
+  scan-results-path:
+    description: 'Path to the main scan results file'
+  findings-count:
+    description: 'Total number of security findings detected'
+  critical-findings:
+    description: 'Number of critical severity findings'
+  high-findings:
+    description: 'Number of high severity findings'
+  medium-findings:
+    description: 'Number of medium severity findings'
+  low-findings:
+    description: 'Number of low severity findings'
+  sarif-path:
+    description: 'Path to the generated SARIF file (if enabled)'
+  sarif-id:
+    description: 'GitHub SARIF upload ID (if uploaded successfully)'
+  scan-duration:
+    description: 'Duration of the security scan in seconds'
+  tools-executed:
+    description: 'Comma-separated list of security tools that were executed'
+  cache-enabled:
+    description: 'Whether caching was enabled for this run (true/false)'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Run ASH security scan
+      id: ash-scan
+      shell: bash
+      run: |
+        # Build the Docker image
+        docker build -t ash-action:latest ${{ github.action_path }}
+
+        # Create output directory on host
+        mkdir -p "${{ github.workspace }}/${{ inputs.output-directory }}"
+
+    - name: Generate cache date key
+      id: cache-date
+      if: inputs.enable-caching == 'true'
+      shell: bash
+      run: |
+        case "${{ inputs.cache-ttl }}" in
+          "daily")
+            DATE_KEY=$(date -u +%Y-%m-%d)
+            ;;
+          "weekly")
+            DATE_KEY=$(date -u +%Y-W%U)
+            ;;
+          "monthly")
+            DATE_KEY=$(date -u +%Y-%m)
+            ;;
+          *)
+            DATE_KEY=$(date -u +%Y-W%U)  # Default to weekly
+            ;;
+        esac
+        echo "date-key=${DATE_KEY}" >> $GITHUB_OUTPUT
+
+    - name: Cache Docker layers
+      id: docker-cache
+      if: inputs.enable-caching == 'true'
+      uses: actions/cache@v4
+      with:
+        path: /tmp/.buildx-cache
+        key: docker-ash-${{ runner.os }}-${{ hashFiles('Dockerfile') }}-${{ steps.cache-date.outputs.date-key }}
+        restore-keys: |
+          docker-ash-${{ runner.os }}-${{ hashFiles('Dockerfile') }}-
+          docker-ash-${{ runner.os }}-
+
+    - name: Cache tool directories (opportunistic)
+      id: tools-cache
+      if: inputs.enable-caching == 'true'
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cache
+          ~/.local
+          /tmp/ash-cache
+        key: tools-${{ runner.os }}-${{ steps.cache-date.outputs.date-key }}
+        restore-keys: |
+          tools-${{ runner.os }}-
+
+    - name: Run security scan
+      shell: bash
+      run: |
+        # Set up basic cache mount points (opportunistic)
+        CACHE_MOUNTS=""
+        if [[ "${{ inputs.enable-caching }}" == "true" ]]; then
+          mkdir -p ~/.cache ~/.local /tmp/ash-cache
+          CACHE_MOUNTS="-v $HOME/.cache:/root/.cache -v $HOME/.local:/root/.local -v /tmp/ash-cache:/tmp/ash-cache"
+        fi
+
+        # Run the security scan with optional cache mounts
+        docker run --rm \
+          -v "${{ github.workspace }}:/workspace" \
+          ${CACHE_MOUNTS} \
+          -e GITHUB_WORKSPACE="/workspace" \
+          -e GITHUB_ACTIONS="true" \
+          -e GITHUB_EVENT_NAME="${{ github.event_name }}" \
+          -e GITHUB_REF="${{ github.ref }}" \
+          -e GITHUB_SHA="${{ github.sha }}" \
+          -e GITHUB_REPOSITORY="${{ github.repository }}" \
+          -e GITHUB_SERVER_URL="${{ github.server_url }}" \
+          -e GITHUB_API_URL="${{ github.api_url }}" \
+          -e GITHUB_RUN_ID="${{ github.run_id }}" \
+          -e GITHUB_OUTPUT="/workspace/${{ inputs.output-directory }}/github_output" \
+          ash-action:latest \
+          "${{ inputs.source-directory }}" \
+          "${{ inputs.output-directory }}" \
+          "${{ inputs.output-format }}" \
+          "${{ inputs.fail-on-findings }}" \
+          "${{ inputs.severity-threshold }}" \
+          "${{ inputs.offline-mode }}" \
+          "${{ inputs.file-extensions }}" \
+          "${{ inputs.exclude-patterns }}" \
+          "${{ inputs.preserve-reports }}" \
+          "${{ inputs.parallel-execution }}" \
+          "${{ inputs.debug }}" \
+          "${{ inputs.quiet }}" \
+          "${{ inputs.sarif-output }}" \
+          "${{ inputs.upload-sarif }}" \
+          "${{ inputs.sarif-category }}" \
+          "${{ inputs.github-token }}" \
+          "${{ inputs.wait-for-processing }}" \
+          "${{ inputs.pr-comment }}" \
+          "${{ inputs.pr-comment-mode }}" \
+          "${{ inputs.pr-comment-format }}" \
+          "${{ inputs.ash-version }}" \
+          "${{ inputs.ash-mode }}" \
+          "${{ inputs.custom-config }}" \
+          "${{ inputs.upload-artifacts }}" \
+          "${{ inputs.artifact-retention-days }}" \
+          "${{ inputs.scanners }}" \
+          "${{ inputs.exclude-scanners }}" \
+          "${{ inputs.ignore-suppressions }}" \
+          "${{ inputs.offline-semgrep-rulesets }}"
+
+        # Extract outputs from the container
+        if [ -f "${{ github.workspace }}/${{ inputs.output-directory }}/github_output" ]; then
+          cat "${{ github.workspace }}/${{ inputs.output-directory }}/github_output" >> $GITHUB_OUTPUT
+        fi
+
+        # Add cache status to outputs
+        echo "cache-enabled=${{ inputs.enable-caching }}" >> $GITHUB_OUTPUT
+
+    - name: Upload SARIF to GitHub Security
+      if: inputs.upload-sarif == 'true' && always()
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: ${{ github.workspace }}/${{ inputs.output-directory }}/reports/ash.sarif
+        category: ${{ inputs.sarif-category }}
+        wait-for-processing: ${{ inputs.wait-for-processing }}
+      continue-on-error: true
+
+    - name: Upload scan artifacts
+      if: inputs.upload-artifacts == 'true' && always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: ash-security-scan-results
+        path: ${{ github.workspace }}/${{ inputs.output-directory }}/
+        retention-days: ${{ inputs.artifact-retention-days }}
+      continue-on-error: true

@@ -1,0 +1,48 @@
+{
+  "$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "AWS Automated Security Helper",
+          "version": "1.0.0",
+          "informationUri": "https://github.com/awslabs/automated-security-helper"
+        }
+      },
+      "results": [
+        {
+          "ruleId": "bandit.B105",
+          "ruleIndex": 0,
+          "level": "error",
+          "message": {
+            "text": "Possible hardcoded password"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/example.py"
+                },
+                "region": {
+                  "startLine": 10,
+                  "endLine": 10
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "rules": [
+        {
+          "id": "bandit.B105",
+          "name": "hardcoded_password_string",
+          "shortDescription": {
+            "text": "Possible hardcoded password"
+          },
+          "helpUri": "https://bandit.readthedocs.io/en/latest/plugins/b105_hardcoded_password_string.html"
+        }
+      ]
+    }
+  ]
+}

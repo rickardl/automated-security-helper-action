@@ -1,0 +1,113 @@
+name: Local Testing with ASH v3
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+  security-events: write
+  pull-requests: write
+
+jobs:
+  ash-v3-scan:
+    runs-on: ubuntu-latest
+    name: ASH v3 Security Scan
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Run ASH v3 Security Scan
+      uses: ./
+      id: ash-scan
+      with:
+        # ASH v3 specific parameters
+        ash-mode: 'container'  # Use container mode for full tool support
+        ash-version: 'beta'    # Use v3 beta features
+
+        # Basic scan configuration
+        source-directory: '.'
+        output-directory: 'security-results'
+        output-format: 'both'
+
+        # Severity and failure configuration
+        severity-threshold: 'medium'
+        fail-on-findings: true
+
+        # GitHub integration
+        sarif-output: true
+        upload-sarif: true
+        sarif-category: 'ash-v3-security'
+
+        # Pull request integration
+        pr-comment: true
+        pr-comment-mode: 'review'
+        pr-comment-format: 'sarif'
+
+        # ASH v3 scanner control (new parameters)
+        scanners: 'bandit,semgrep,checkov,detect-secrets,npm-audit'  # Specify which scanners to run
+        # exclude-scanners: 'grype,syft'  # Exclude specific scanners if needed
+        ignore-suppressions: false  # Respect suppression rules
+        offline-semgrep-rulesets: 'p/ci,p/security-audit'  # Enhanced Semgrep rules
+
+        # Performance settings
+        parallel-execution: true
+        enable-caching: true
+        cache-ttl: 'weekly'
+
+        # Artifact upload
+        upload-artifacts: true
+        artifact-retention-days: 30
+
+        # Debugging (enable for troubleshooting)
+        debug: false
+        quiet: false
+
+    - name: Display scan results
+      if: always()
+      run: |
+        echo "## ASH v3 Scan Results Summary"
+        echo "- **Total Findings:** ${{ steps.ash-scan.outputs.findings-count }}"
+        echo "- **Critical:** ${{ steps.ash-scan.outputs.critical-findings }}"
+        echo "- **High:** ${{ steps.ash-scan.outputs.high-findings }}"
+        echo "- **Medium:** ${{ steps.ash-scan.outputs.medium-findings }}"
+        echo "- **Low:** ${{ steps.ash-scan.outputs.low-findings }}"
+        echo "- **Scan Duration:** ${{ steps.ash-scan.outputs.scan-duration }} seconds"
+        echo "- **Tools Executed:** ${{ steps.ash-scan.outputs.tools-executed }}"
+
+        if [ -f "${{ steps.ash-scan.outputs.sarif-path }}" ]; then
+          echo "- **SARIF Path:** ${{ steps.ash-scan.outputs.sarif-path }}"
+        fi
+
+    - name: Comment on PR (custom format)
+      if: github.event_name == 'pull_request' && steps.ash-scan.outputs.findings-count > 0
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const findingsCount = '${{ steps.ash-scan.outputs.findings-count }}';
+          const criticalFindings = '${{ steps.ash-scan.outputs.critical-findings }}';
+          const highFindings = '${{ steps.ash-scan.outputs.high-findings }}';
+
+          const comment = `## 🛡️ Security Scan Results (ASH v3)
+
+          **Summary:** ${findingsCount} security findings detected
+
+          | Severity | Count |
+          |----------|-------|
+          | Critical | ${criticalFindings} |
+          | High     | ${highFindings} |
+          | Medium   | ${{ steps.ash-scan.outputs.medium-findings }} |
+          | Low      | ${{ steps.ash-scan.outputs.low-findings }} |
+
+          📁 **Detailed results:** Check the [Security tab](https://github.com/${{ github.repository }}/security/code-scanning) and workflow artifacts.
+
+          ⚡ **Scan completed in:** ${{ steps.ash-scan.outputs.scan-duration }} seconds`;
+
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: comment
+          });

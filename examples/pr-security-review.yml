@@ -1,0 +1,116 @@
+name: Pull Request Security Review with ASH v3
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - '.github/**'
+      - '!.github/workflows/security*.yml'
+
+jobs:
+  security-review:
+    name: Security Review with Inline Comments
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      security-events: write    # For SARIF upload
+      pull-requests: write      # For inline PR comments
+
+    steps:
+      - name: Checkout PR code
+        uses: actions/checkout@v4
+        with:
+          # Checkout the PR head commit for accurate line numbers
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Run Security Scan with PR Comments (ASH v3)
+        id: security-scan
+        uses: aws-actions/automated-security-helper-action@v2
+        with:
+          source-directory: '.'
+          output-directory: 'pr-security-results'
+          output-format: 'json'
+          severity-threshold: 'medium'
+          fail-on-findings: 'false'  # Don't block PR, just provide feedback
+
+          # SARIF upload configuration
+          upload-sarif: 'true'
+          sarif-category: 'pr-security-review'
+
+          # PR comment configuration
+          pr-comment: 'true'
+          pr-comment-mode: 'review'  # Single review with all comments
+          pr-comment-format: 'sarif'  # Enhanced SARIF-based comments
+
+          # ASH v3 specific features
+          ash-mode: 'container'
+          ash-version: 'beta'
+          scanners: 'bandit,semgrep,detect-secrets,checkov'  # Fast scanners for PR
+          ignore-suppressions: 'false'  # Respect suppressions in PR context
+
+          # Performance optimizations for PR scans
+          parallel-execution: 'true'
+          file-extensions: 'py,js,jsx,ts,tsx,go,java,tf,yml,yaml'
+          exclude-patterns: '*/test/*,*/tests/*,*/node_modules/*,*/vendor/*'
+
+      - name: Post-scan summary
+        if: always()
+        run: |
+          echo "### 🛡️ Security Scan Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Total Findings:** ${{ steps.security-scan.outputs.findings-count }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Critical:** ${{ steps.security-scan.outputs.critical-findings }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **High:** ${{ steps.security-scan.outputs.high-findings }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Medium:** ${{ steps.security-scan.outputs.medium-findings }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Low:** ${{ steps.security-scan.outputs.low-findings }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [[ "${{ steps.security-scan.outputs.findings-count }}" -gt 0 ]]; then
+            echo "🔍 **Review the inline comments** in the 'Files changed' tab for detailed security feedback." >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "💡 **Tip:** Address security findings before merging to maintain code quality." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ **No security findings** detected in the changed files!" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Upload scan artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pr-security-scan-results
+          path: pr-security-results/
+          retention-days: 7  # Short retention for PR scans
+
+  # Optional: Block merge for critical findings
+  security-gate:
+    name: Security Gate
+    runs-on: ubuntu-latest
+    needs: security-review
+    if: always()
+
+    steps:
+      - name: Check security gate
+        run: |
+          critical_findings="${{ needs.security-review.outputs.critical-findings }}"
+          high_findings="${{ needs.security-review.outputs.high-findings }}"
+
+          echo "Security Gate Check:"
+          echo "- Critical: ${critical_findings:-0}"
+          echo "- High: ${high_findings:-0}"
+
+          # Uncomment to block PRs with critical findings
+          # if [[ "${critical_findings:-0}" -gt 0 ]]; then
+          #   echo "❌ BLOCKING: Critical security findings must be addressed before merge"
+          #   exit 1
+          # fi
+
+          # Uncomment to block PRs with too many high findings
+          # if [[ "${high_findings:-0}" -gt 3 ]]; then
+          #   echo "❌ BLOCKING: Too many high-severity findings (${high_findings} > 3)"
+          #   exit 1
+          # fi
+
+          echo "✅ Security gate passed"

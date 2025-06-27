@@ -1,0 +1,112 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+  pull_request:
+    branches: [ main, develop ]
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+
+env:
+  DOCKER_BUILDKIT: 1
+
+jobs:
+  validate:
+    name: Validate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate action.yml
+        run: |
+          echo "Validating action.yml syntax..."
+          python3 -c "
+          import yaml
+          import sys
+          try:
+              with open('action.yml', 'r') as f:
+                  yaml.safe_load(f)
+              print('✅ action.yml syntax is valid')
+          except yaml.YAMLError as e:
+              print(f'❌ action.yml syntax error: {e}')
+              sys.exit(1)
+          "
+
+      - name: Validate workflows with actionlint
+        run: |
+          echo "Installing actionlint..."
+          bash <(curl https://raw.githubusercontent.com/rhymond/actionlint/main/scripts/download-actionlint.bash)
+          echo "Running actionlint..."
+          ./actionlint -color
+
+      - name: Check required files
+        run: |
+          required_files=("README.md" "LICENSE" "Dockerfile" "action.yml")
+          for file in "${required_files[@]}"; do
+            if [[ ! -f "$file" ]]; then
+              echo "❌ Missing required file: $file"
+              exit 1
+            fi
+          done
+          echo "✅ All required files present"
+
+  build:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    needs: validate
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false
+          tags: aws-actions/automated-security-helper-action:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Test Docker image
+        run: |
+          # Basic smoke test of the Docker image
+          docker run --rm aws-actions/automated-security-helper-action:test --help || true
+
+  integration-test:
+    name: Integration Test
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Test action locally
+        uses: ./
+        with:
+          source-directory: './examples'
+          output-directory: 'security-results'
+          output-format: 'sarif'
+          severity-threshold: 'medium'
+          fail-on-findings: 'false'
+
+      - name: Verify output
+        run: |
+          if [[ -d "security-results" ]]; then
+            echo "✅ Integration test passed - output directory created"
+            ls -la security-results/
+          else
+            echo "❌ Integration test failed - No output directory created"
+            exit 1
+          fi

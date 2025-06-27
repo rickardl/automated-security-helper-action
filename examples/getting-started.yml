@@ -1,0 +1,51 @@
+name: Getting Started with ASH v3
+
+on:
+  push:
+    branches: [ main, develop ]
+    # Avoid unnecessary scans on documentation changes
+    paths-ignore:
+      - '**/*.md'
+      - '**/*.txt'
+      - 'docs/**'
+      - '.github/**'
+  pull_request:
+    branches: [ main ]
+    paths-ignore:
+      - '**/*.md'
+      - '**/*.txt'
+      - 'docs/**'
+      - '.github/**'
+  schedule:
+    # Run weekly security scans on Sundays at 2 AM UTC
+    - cron: '0 2 * * 0'
+
+jobs:
+  security-scan:
+    name: Run Security Scan
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      security-events: write  # Required for SARIF upload
+      pull-requests: write   # Required for PR comments
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run AWS Automated Security Helper v3
+        uses: aws-actions/automated-security-helper-action@v2
+        with:
+          source-directory: '.'
+          output-directory: 'security-results'
+          output-format: 'both'
+          fail-on-findings: 'true'
+          severity-threshold: 'medium'
+          upload-sarif: 'true'
+          sarif-category: 'ash-basic-scan'
+          pr-comment: 'true'        # Add inline PR comments
+          pr-comment-mode: 'review' # Batch comments in single review
+          ash-mode: 'container'     # Use ASH v3 container mode
+          ash-version: 'beta'       # Use ASH v3 beta features
+          scanners: 'bandit,semgrep,checkov,detect-secrets'  # Core security scanners

@@ -1,0 +1,124 @@
+name: Bug Report
+description: Report a bug or issue with the AWS Automated Security Helper Action
+title: "[Bug]: "
+labels: ["bug", "needs-triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report! Please provide as much detail as possible to help us resolve the issue quickly.
+
+  - type: input
+    id: action-version
+    attributes:
+      label: Action Version
+      description: Which version of the action are you using?
+      placeholder: "v1.2.3 or commit SHA"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: runner-os
+    attributes:
+      label: Runner Operating System
+      description: What operating system is your GitHub Actions runner using?
+      options:
+        - ubuntu-latest
+        - ubuntu-20.04
+        - ubuntu-18.04
+        - windows-latest
+        - macos-latest
+        - self-hosted
+    validations:
+      required: true
+
+  - type: textarea
+    id: bug-description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is
+      placeholder: Describe the issue you're experiencing
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction-steps
+    attributes:
+      label: Steps to Reproduce
+      description: Steps to reproduce the behavior
+      placeholder: |
+        1. Set up workflow with...
+        2. Run action with inputs...
+        3. See error...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected Behavior
+      description: A clear description of what you expected to happen
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual-behavior
+    attributes:
+      label: Actual Behavior
+      description: A clear description of what actually happened
+    validations:
+      required: true
+
+  - type: textarea
+    id: workflow-config
+    attributes:
+      label: Workflow Configuration
+      description: Share your workflow YAML configuration (remove any sensitive information)
+      render: yaml
+      placeholder: |
+        name: Security Scan
+        on: [push]
+        jobs:
+          security:
+            runs-on: ubuntu-latest
+            steps:
+              - uses: actions/checkout@v4
+              - uses: aws-actions/automated-security-helper-action@v1
+                with:
+                  # your configuration here
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Action Logs
+      description: Relevant logs from the GitHub Actions run (remove any sensitive information)
+      render: text
+      placeholder: Paste the relevant log output here
+
+  - type: input
+    id: repository-type
+    attributes:
+      label: Repository Type
+      description: What type of project are you scanning?
+      placeholder: "e.g., Python, JavaScript, Terraform, Multi-language"
+
+  - type: checkboxes
+    id: troubleshooting
+    attributes:
+      label: Troubleshooting Steps Attempted
+      description: Which troubleshooting steps have you already tried?
+      options:
+        - label: Enabled debug mode (`debug: 'true'`)
+        - label: Tried with different input parameters
+        - label: Checked action permissions
+        - label: Reviewed repository structure
+        - label: Tested on a minimal example
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Add any other context about the problem here
+      placeholder: Any additional information that might help us understand the issue

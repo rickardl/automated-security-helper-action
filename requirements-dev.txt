@@ -1,0 +1,35 @@
+# Development dependencies for AWS Automated Security Helper Action
+
+# Code formatting and linting
+black==23.12.1
+flake8==7.0.0
+isort==5.13.2
+
+# Security scanning
+bandit==1.7.5
+safety==2.3.4
+
+# Testing
+pytest==7.4.3
+pytest-cov==4.1.0
+pytest-mock==3.12.0
+
+# Documentation
+mkdocs==1.5.3
+mkdocs-material==9.5.2
+
+# Type checking
+mypy==1.8.0
+types-requests==2.31.0.20240125
+
+# SARIF handling (already in main requirements but included for dev environment)
+sarif-om==1.0.4
+
+# JSON/YAML processing
+pyyaml==6.0.1
+
+# HTTP requests for testing GitHub API integration
+requests==2.31.0
+
+# Template rendering for advanced PR comments
+jinja2==3.1.3
