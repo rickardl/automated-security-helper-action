@@ -11,12 +11,11 @@
 
 ## 🚀 Features
 
-**🔍 Multi-Language SAST** - Python, JavaScript/TypeScript, Java, Go, C#, Ruby, PHP, Kotlin, Swift, Bash
-**🏗️ Infrastructure-as-Code** - Terraform, CloudFormation, CDK, Kubernetes, Dockerfile, ARM Templates
-**🔄 Native SARIF Support** - Direct integration with GitHub Security tab
-**💬 Pull Request Integration** - Inline security findings comments
-**⚡ Performance Optimized** - Docker layer caching and parallel execution
-**🎯 Highly Configurable** - Run specific scanners, exclude others, custom thresholds
+*🔍 Multi-Language SAST** - Python, JavaScript/TypeScript, Java, Go, C#, Ruby, PHP, Kotlin, Swift, Bash
+*🏗️ Infrastructure-as-Code** - Terraform, CloudFormation, CDK, Kubernetes, Dockerfile, ARM Templates
+*🔄 Native SARIF Support** - Direct integration with GitHub Security tab
+*💬 Pull Request Integration** - Inline security findings comments
+*🎯 Highly Configurable** - Run specific scanners, exclude others, custom thresholds
 
 ## 📋 Table of Contents
 
