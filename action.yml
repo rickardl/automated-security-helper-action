@@ -1,5 +1,5 @@
 name: 'AWS Automated Security Helper Action'
-description: 'Security scanning with AWS Automated Security Helper (ASH). Multi-language SAST, DAST, IaC scanning, secrets detection, and vulnerability analysis.'
+description: 'Security scanning with AWS Automated Security Helper (ASH).'
 author: 'AWS'
 branding:
   icon: 'shield'
