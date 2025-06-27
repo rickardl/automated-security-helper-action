@@ -162,8 +162,18 @@ runs:
       id: ash-scan
       shell: bash
       run: |
-        # Build the Docker image
-        docker build -t ash-action:latest ${{ github.action_path }}
+        # Use the published Docker image
+        # For tagged releases, use the specific version. For development, build locally.
+        if [[ "${{ github.action_ref }}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+.*$ ]]; then
+          # Use published image for tagged releases
+          DOCKER_IMAGE="ghcr.io/rickardl/automated-security-helper-action:${{ github.action_ref }}"
+          echo "Using published Docker image: $DOCKER_IMAGE"
+        else
+          # Build locally for development/testing
+          echo "Building Docker image locally for development..."
+          docker build -t ash-action:latest ${{ github.action_path }}
+          DOCKER_IMAGE="ash-action:latest"
+        fi
 
         # Create output directory on host
         mkdir -p "${{ github.workspace }}/${{ inputs.output-directory }}"
@@ -237,7 +247,7 @@ runs:
           -e GITHUB_API_URL="${{ github.api_url }}" \
           -e GITHUB_RUN_ID="${{ github.run_id }}" \
           -e GITHUB_OUTPUT="/workspace/${{ inputs.output-directory }}/github_output" \
-          ash-action:latest \
+          ${DOCKER_IMAGE} \
           "${{ inputs.source-directory }}" \
           "${{ inputs.output-directory }}" \
           "${{ inputs.output-format }}" \
