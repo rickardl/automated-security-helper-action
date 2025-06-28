@@ -227,17 +227,16 @@ runs:
     - name: Run security scan
       shell: bash
       run: |
-        # Set up basic cache mount points (opportunistic)
-        CACHE_MOUNTS=""
+        # Build docker command with conditional cache mounts
+        DOCKER_CMD="docker run --rm -v \"${{ github.workspace }}:/workspace\""
+        
         if [[ "${{ inputs.enable-caching }}" == "true" ]]; then
           mkdir -p ~/.cache ~/.local /tmp/ash-cache
-          CACHE_MOUNTS="-v $HOME/.cache:/root/.cache -v $HOME/.local:/root/.local -v /tmp/ash-cache:/tmp/ash-cache"
+          DOCKER_CMD="$DOCKER_CMD -v $HOME/.cache:/root/.cache -v $HOME/.local:/root/.local -v /tmp/ash-cache:/tmp/ash-cache"
         fi
 
-        # Run the security scan with optional cache mounts
-        docker run --rm \
-          -v "${{ github.workspace }}:/workspace" \
-          ${CACHE_MOUNTS} \
+        # Add environment variables and run the scan
+        eval "$DOCKER_CMD" \
           -e GITHUB_WORKSPACE="/workspace" \
           -e GITHUB_ACTIONS="true" \
           -e GITHUB_EVENT_NAME="${{ github.event_name }}" \
