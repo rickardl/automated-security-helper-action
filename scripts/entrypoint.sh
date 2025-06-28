@@ -23,7 +23,7 @@ PR_COMMENT="${18:-true}"
 PR_COMMENT_MODE="${19:-review}"
 PR_COMMENT_FORMAT="${20:-sarif}"
 ASH_VERSION="${21:-latest}"
-ASH_MODE="${22:-container}"
+ASH_MODE="${22:-local}"
 CUSTOM_CONFIG="${23:-}"
 UPLOAD_ARTIFACTS="${24:-true}"
 ARTIFACT_RETENTION_DAYS="${25:-30}"
@@ -184,6 +184,8 @@ fi
 # Handle fail-on-findings parameter
 if [[ "${FAIL_ON_FINDINGS}" == "true" ]]; then
     ASH_ARGS+=("--fail-on-findings")
+else
+    ASH_ARGS+=("--no-fail-on-findings")
 fi
 
 # Handle ignore suppressions
@@ -373,49 +375,53 @@ elif [[ "${PR_COMMENT}" == "true" ]] && [[ -z "${GITHUB_TOKEN}" ]]; then
 fi
 
 # Set GitHub Actions outputs
-echo "scan-results-path=${RESULTS_FILE}" >> "${GITHUB_OUTPUT}"
-echo "findings-count=${TOTAL_FINDINGS}" >> "${GITHUB_OUTPUT}"
-echo "critical-findings=${CRITICAL_FINDINGS}" >> "${GITHUB_OUTPUT}"
-echo "high-findings=${HIGH_FINDINGS}" >> "${GITHUB_OUTPUT}"
-echo "medium-findings=${MEDIUM_FINDINGS}" >> "${GITHUB_OUTPUT}"
-echo "low-findings=${LOW_FINDINGS}" >> "${GITHUB_OUTPUT}"
-echo "sarif-path=${SARIF_PATH}" >> "${GITHUB_OUTPUT}"
-echo "sarif-id=${SARIF_ID}" >> "${GITHUB_OUTPUT}"
-echo "scan-duration=${SCAN_DURATION}" >> "${GITHUB_OUTPUT}"
-echo "tools-executed=${TOOLS_EXECUTED}" >> "${GITHUB_OUTPUT}"
+if [[ -n "${GITHUB_OUTPUT}" ]]; then
+    echo "scan-results-path=${RESULTS_FILE}" >> "${GITHUB_OUTPUT}"
+    echo "findings-count=${TOTAL_FINDINGS}" >> "${GITHUB_OUTPUT}"
+    echo "critical-findings=${CRITICAL_FINDINGS}" >> "${GITHUB_OUTPUT}"
+    echo "high-findings=${HIGH_FINDINGS}" >> "${GITHUB_OUTPUT}"
+    echo "medium-findings=${MEDIUM_FINDINGS}" >> "${GITHUB_OUTPUT}"
+    echo "low-findings=${LOW_FINDINGS}" >> "${GITHUB_OUTPUT}"
+    echo "sarif-path=${SARIF_PATH}" >> "${GITHUB_OUTPUT}"
+    echo "sarif-id=${SARIF_ID}" >> "${GITHUB_OUTPUT}"
+    echo "scan-duration=${SCAN_DURATION}" >> "${GITHUB_OUTPUT}"
+    echo "tools-executed=${TOOLS_EXECUTED}" >> "${GITHUB_OUTPUT}"
+fi
 
 # Create GitHub Step Summary
-{
-    echo "## 🛡️ AWS Automated Security Helper Results"
-    echo ""
-    echo "### Summary"
-    echo "- **Total Findings:** ${TOTAL_FINDINGS}"
-    echo "- **Critical:** ${CRITICAL_FINDINGS}"
-    echo "- **High:** ${HIGH_FINDINGS}"
-    echo "- **Medium:** ${MEDIUM_FINDINGS}"
-    echo "- **Low:** ${LOW_FINDINGS}"
-    echo "- **Scan Duration:** ${SCAN_DURATION} seconds"
-    echo "- **Tools Executed:** ${TOOLS_EXECUTED}"
-    echo ""
+if [[ -n "${GITHUB_STEP_SUMMARY}" ]]; then
+    {
+        echo "## 🛡️ AWS Automated Security Helper Results"
+        echo ""
+        echo "### Summary"
+        echo "- **Total Findings:** ${TOTAL_FINDINGS}"
+        echo "- **Critical:** ${CRITICAL_FINDINGS}"
+        echo "- **High:** ${HIGH_FINDINGS}"
+        echo "- **Medium:** ${MEDIUM_FINDINGS}"
+        echo "- **Low:** ${LOW_FINDINGS}"
+        echo "- **Scan Duration:** ${SCAN_DURATION} seconds"
+        echo "- **Tools Executed:** ${TOOLS_EXECUTED}"
+        echo ""
 
-    if [[ "${TOTAL_FINDINGS}" -gt 0 ]]; then
-        echo "### 🚨 Security Findings Detected"
-        echo ""
-        echo "Security findings were detected in your code. Please review the detailed results in the artifacts."
-        echo ""
-    else
-        echo "### ✅ No Security Findings"
-        echo ""
-        echo "No security findings detected in the scanned code."
-        echo ""
-    fi
+        if [[ "${TOTAL_FINDINGS}" -gt 0 ]]; then
+            echo "### 🚨 Security Findings Detected"
+            echo ""
+            echo "Security findings were detected in your code. Please review the detailed results in the artifacts."
+            echo ""
+        else
+            echo "### ✅ No Security Findings"
+            echo ""
+            echo "No security findings detected in the scanned code."
+            echo ""
+        fi
 
-    echo "### Files"
-    echo "- **Results:** \`${RESULTS_FILE}\`"
-    if [[ -n "${SARIF_PATH}" ]]; then
-        echo "- **SARIF:** \`${SARIF_PATH}\`"
-    fi
-} >> "${GITHUB_STEP_SUMMARY}"
+        echo "### Files"
+        echo "- **Results:** \`${RESULTS_FILE}\`"
+        if [[ -n "${SARIF_PATH}" ]]; then
+            echo "- **SARIF:** \`${SARIF_PATH}\`"
+        fi
+    } >> "${GITHUB_STEP_SUMMARY}"
+fi
 
 # Handle artifact upload
 if [[ "${UPLOAD_ARTIFACTS}" == "true" ]]; then

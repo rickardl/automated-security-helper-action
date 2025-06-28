@@ -90,7 +90,7 @@ jobs:
       - name: Test action locally
         uses: ./
         with:
-          source-directory: './examples'
+          source-directory: '.'
           output-directory: 'security-results'
           output-format: 'sarif'
           severity-threshold: 'medium'
