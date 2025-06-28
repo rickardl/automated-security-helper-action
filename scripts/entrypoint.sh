@@ -376,6 +376,8 @@ fi
 
 # Set GitHub Actions outputs
 if [[ -n "${GITHUB_OUTPUT}" ]]; then
+    # Ensure the output file directory exists
+    mkdir -p "$(dirname "${GITHUB_OUTPUT}")"
     echo "scan-results-path=${RESULTS_FILE}" >> "${GITHUB_OUTPUT}"
     echo "findings-count=${TOTAL_FINDINGS}" >> "${GITHUB_OUTPUT}"
     echo "critical-findings=${CRITICAL_FINDINGS}" >> "${GITHUB_OUTPUT}"
@@ -386,6 +388,9 @@ if [[ -n "${GITHUB_OUTPUT}" ]]; then
     echo "sarif-id=${SARIF_ID}" >> "${GITHUB_OUTPUT}"
     echo "scan-duration=${SCAN_DURATION}" >> "${GITHUB_OUTPUT}"
     echo "tools-executed=${TOOLS_EXECUTED}" >> "${GITHUB_OUTPUT}"
+    
+    echo "::debug::GitHub outputs written to: ${GITHUB_OUTPUT}"
+    echo "::debug::SARIF path output: ${SARIF_PATH}"
 fi
 
 # Create GitHub Step Summary

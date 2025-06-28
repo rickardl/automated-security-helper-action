@@ -286,17 +286,47 @@ runs:
         # Add cache status to outputs
         echo "cache-enabled=${{ inputs.enable-caching }}" >> $GITHUB_OUTPUT
 
+    - name: Check SARIF file existence
+      if: inputs.upload-sarif == 'true'
+      id: check-sarif
+      shell: bash
+      run: |
+        SARIF_FILE="${{ github.workspace }}/${{ inputs.output-directory }}/reports/ash.sarif"
+        if [ -f "$SARIF_FILE" ]; then
+          echo "sarif-exists=true" >> $GITHUB_OUTPUT
+          echo "sarif-file-path=$SARIF_FILE" >> $GITHUB_OUTPUT
+          echo "✅ SARIF file found at: $SARIF_FILE"
+        else
+          echo "sarif-exists=false" >> $GITHUB_OUTPUT
+          echo "⚠️ SARIF file not found at: $SARIF_FILE"
+        fi
+
     - name: Upload SARIF to GitHub Security
-      if: inputs.upload-sarif == 'true' && always()
+      if: inputs.upload-sarif == 'true' && steps.check-sarif.outputs.sarif-exists == 'true'
       uses: github/codeql-action/upload-sarif@v3
       with:
-        sarif_file: ${{ github.workspace }}/${{ inputs.output-directory }}/reports/ash.sarif
+        sarif_file: ${{ steps.check-sarif.outputs.sarif-file-path }}
         category: ${{ inputs.sarif-category }}
         wait-for-processing: ${{ inputs.wait-for-processing }}
       continue-on-error: true
 
+    - name: Check artifacts directory
+      if: inputs.upload-artifacts == 'true'
+      id: check-artifacts
+      shell: bash
+      run: |
+        ARTIFACTS_DIR="${{ github.workspace }}/${{ inputs.output-directory }}"
+        if [ -d "$ARTIFACTS_DIR" ] && [ "$(ls -A "$ARTIFACTS_DIR" 2>/dev/null)" ]; then
+          echo "artifacts-exist=true" >> $GITHUB_OUTPUT
+          echo "✅ Artifacts directory found with content: $ARTIFACTS_DIR"
+          ls -la "$ARTIFACTS_DIR"
+        else
+          echo "artifacts-exist=false" >> $GITHUB_OUTPUT
+          echo "⚠️ Artifacts directory empty or not found: $ARTIFACTS_DIR"
+        fi
+
     - name: Upload scan artifacts
-      if: inputs.upload-artifacts == 'true' && always()
+      if: inputs.upload-artifacts == 'true' && steps.check-artifacts.outputs.artifacts-exist == 'true'
       uses: actions/upload-artifact@v4
       with:
         name: ash-security-scan-results
