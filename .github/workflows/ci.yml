@@ -24,27 +24,21 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Validate action.yml
-        run: |
-          echo "Validating action.yml syntax..."
-          python3 -c "
-          import yaml
-          import sys
-          try:
-              with open('action.yml', 'r') as f:
-                  yaml.safe_load(f)
-              print('✅ action.yml syntax is valid')
-          except yaml.YAMLError as e:
-              print(f'❌ action.yml syntax error: {e}')
-              sys.exit(1)
-          "
+      - name: Validate action.yml with yamllint
+        uses: karancode/yamllint-github-action@master
+        with:
+          yamllint_file_or_dir: 'action.yml'
+          yamllint_strict: false
+          yamllint_comment: false
+        env:
+          GITHUB_ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Validate workflows with actionlint
-        run: |
-          echo "Installing actionlint..."
-          bash <(curl https://raw.githubusercontent.com/rhymond/actionlint/main/scripts/download-actionlint.bash)
-          echo "Running actionlint..."
-          ./actionlint -color
+        uses: raven-actions/actionlint@v2
+        with:
+          matcher: true
+          fail-on-error: true
+          flags: "-color"
 
       - name: Check required files
         run: |
