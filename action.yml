@@ -159,8 +159,8 @@ outputs:
 runs:
   using: 'composite'
   steps:
-    - name: Run ASH security scan
-      id: ash-scan
+    - name: Prepare Docker image
+      id: prepare-image
       shell: bash
       run: |
         # Use the published Docker image
@@ -175,6 +175,7 @@ runs:
           docker build -t ash-action:latest ${{ github.action_path }}
           DOCKER_IMAGE="ash-action:latest"
         fi
+        echo "docker-image=${DOCKER_IMAGE}" >> $GITHUB_OUTPUT
 
         # Create output directory on host
         mkdir -p "${{ github.workspace }}/${{ inputs.output-directory }}"
@@ -225,6 +226,7 @@ runs:
           tools-${{ runner.os }}-
 
     - name: Run security scan
+      id: run-scan
       shell: bash
       run: |
         # Build docker command with conditional cache mounts
@@ -247,7 +249,7 @@ runs:
           -e GITHUB_API_URL="${{ github.api_url }}" \
           -e GITHUB_RUN_ID="${{ github.run_id }}" \
           -e GITHUB_OUTPUT="/workspace/${{ inputs.output-directory }}/github_output" \
-          ${DOCKER_IMAGE} \
+          ${{ steps.prepare-image.outputs.docker-image }} \
           "${{ inputs.source-directory }}" \
           "${{ inputs.output-directory }}" \
           "${{ inputs.output-format }}" \
@@ -286,50 +288,26 @@ runs:
         # Add cache status to outputs
         echo "cache-enabled=${{ inputs.enable-caching }}" >> $GITHUB_OUTPUT
 
-    - name: Check SARIF file existence
-      if: inputs.upload-sarif == 'true'
-      id: check-sarif
-      shell: bash
-      run: |
-        SARIF_FILE="${{ github.workspace }}/${{ inputs.output-directory }}/reports/ash.sarif"
-        if [ -f "$SARIF_FILE" ]; then
-          echo "sarif-exists=true" >> $GITHUB_OUTPUT
-          echo "sarif-file-path=$SARIF_FILE" >> $GITHUB_OUTPUT
-          echo "✅ SARIF file found at: $SARIF_FILE"
-        else
-          echo "sarif-exists=false" >> $GITHUB_OUTPUT
-          echo "⚠️ SARIF file not found at: $SARIF_FILE"
-        fi
-
     - name: Upload SARIF to GitHub Security
-      if: inputs.upload-sarif == 'true' && steps.check-sarif.outputs.sarif-exists == 'true'
+      if: >
+        inputs.upload-sarif == 'true' &&
+        steps.run-scan.outputs.sarif-path != ''
       uses: github/codeql-action/upload-sarif@v3
       with:
-        sarif_file: ${{ steps.check-sarif.outputs.sarif-file-path }}
+        sarif_file: ${{ steps.run-scan.outputs.sarif-path }}
         category: ${{ inputs.sarif-category }}
         wait-for-processing: ${{ inputs.wait-for-processing }}
       continue-on-error: true
 
-    - name: Check artifacts directory
-      if: inputs.upload-artifacts == 'true'
-      id: check-artifacts
-      shell: bash
-      run: |
-        ARTIFACTS_DIR="${{ github.workspace }}/${{ inputs.output-directory }}"
-        if [ -d "$ARTIFACTS_DIR" ] && [ "$(ls -A "$ARTIFACTS_DIR" 2>/dev/null)" ]; then
-          echo "artifacts-exist=true" >> $GITHUB_OUTPUT
-          echo "✅ Artifacts directory found with content: $ARTIFACTS_DIR"
-          ls -la "$ARTIFACTS_DIR"
-        else
-          echo "artifacts-exist=false" >> $GITHUB_OUTPUT
-          echo "⚠️ Artifacts directory empty or not found: $ARTIFACTS_DIR"
-        fi
-
     - name: Upload scan artifacts
-      if: inputs.upload-artifacts == 'true' && steps.check-artifacts.outputs.artifacts-exist == 'true'
+      if: >
+        inputs.upload-artifacts == 'true' &&
+        always() &&
+        steps.run-scan.outputs.scan-results-path != ''
       uses: actions/upload-artifact@v4
       with:
         name: ash-security-scan-results
         path: ${{ github.workspace }}/${{ inputs.output-directory }}/
         retention-days: ${{ inputs.artifact-retention-days }}
+        if-no-files-found: warn
       continue-on-error: true
