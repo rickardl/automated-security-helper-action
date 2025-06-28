@@ -231,7 +231,7 @@ runs:
       run: |
         # Build docker command with conditional cache mounts
         DOCKER_CMD="docker run --rm -v \"${{ github.workspace }}:/workspace\""
-        
+
         if [[ "${{ inputs.enable-caching }}" == "true" ]]; then
           mkdir -p ~/.cache ~/.local /tmp/ash-cache
           DOCKER_CMD="$DOCKER_CMD -v $HOME/.cache:/root/.cache -v $HOME/.local:/root/.local -v /tmp/ash-cache:/tmp/ash-cache"
