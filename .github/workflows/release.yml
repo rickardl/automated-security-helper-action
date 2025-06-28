@@ -104,7 +104,6 @@ jobs:
 
     outputs:
       image-digest: ${{ steps.build.outputs.digest }}
-      image-tags: ${{ steps.meta.outputs.tags }}
 
     steps:
       - name: Checkout code
@@ -197,7 +196,6 @@ jobs:
         id: release-notes
         run: |
           VERSION="${{ needs.validate.outputs.version }}"
-          IMAGE_TAGS="${{ needs.build-and-publish.outputs.image-tags }}"
 
           if grep -q "## \[${VERSION}\]" CHANGELOG.md; then
             sed -n "/## \[${VERSION}\]/,/## \[/p" CHANGELOG.md | sed '$d' | tail -n +2 > release-notes.md

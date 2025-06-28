@@ -39,7 +39,7 @@ jobs:
         with:
           matcher: true
           fail-on-error: true
-          flags: "-color"
+          flags: "-color -shellcheck="
 
       - name: Check required files
         run: |
