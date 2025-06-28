@@ -30,6 +30,7 @@ jobs:
           yamllint_file_or_dir: 'action.yml'
           yamllint_strict: false
           yamllint_comment: false
+          yamllint_config_filepath: '.yamllint-action.yml'
         env:
           GITHUB_ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
