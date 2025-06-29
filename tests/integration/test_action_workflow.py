@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 # Add src to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../src"))
 
 
 class TestActionWorkflow:
@@ -14,7 +14,10 @@ class TestActionWorkflow:
 
     def test_severity_filtering_integration(self):
         """Test severity filtering integration."""
-        from src.core.severity_filter import filter_findings_by_severity, count_findings_by_severity
+        from src.core.severity_filter import (
+            filter_findings_by_severity,
+            count_findings_by_severity,
+        )
 
         # Sample test data
         sample_data = {
@@ -22,14 +25,12 @@ class TestActionWorkflow:
                 "bandit": {
                     "findings": [
                         {"severity": "HIGH", "filename": "test1.py"},
-                        {"severity": "MEDIUM", "filename": "test2.py"}
+                        {"severity": "MEDIUM", "filename": "test2.py"},
                     ]
                 },
                 "semgrep": {
-                    "findings": [
-                        {"severity": "CRITICAL", "filename": "test3.js"}
-                    ]
-                }
+                    "findings": [{"severity": "CRITICAL", "filename": "test3.js"}]
+                },
             }
         }
 
@@ -50,12 +51,8 @@ class TestActionWorkflow:
         # Sample configuration
         config = {
             "filters": {"severity_threshold": "high"},
-            "github": {
-                "pr_comments": {"mode": "review", "format": "sarif"}
-            },
-            "tools": {
-                "bandit": {"enabled": True}
-            }
+            "github": {"pr_comments": {"mode": "review", "format": "sarif"}},
+            "tools": {"bandit": {"enabled": True}},
         }
 
         # Test validation
@@ -78,7 +75,8 @@ class TestActionWorkflow:
             pytest.fail("action.yml not found")
 
         import yaml
-        with open(action_yml_path, 'r') as f:
+
+        with open(action_yml_path, "r") as f:
             action_config = yaml.safe_load(f)
 
         # Verify required fields
@@ -113,10 +111,10 @@ class TestActionWorkflow:
             pytest.fail(f"Failed to import modules: {e}")
 
         # Test that modules have expected functions
-        assert hasattr(severity_filter, 'filter_findings_by_severity')
-        assert hasattr(severity_filter, 'count_findings_by_severity')
-        assert hasattr(config_parser, 'load_config')
-        assert hasattr(config_parser, 'validate_config')
+        assert hasattr(severity_filter, "filter_findings_by_severity")
+        assert hasattr(severity_filter, "count_findings_by_severity")
+        assert hasattr(config_parser, "load_config")
+        assert hasattr(config_parser, "validate_config")
 
     def test_entrypoint_script_exists(self):
         """Test that entrypoint script exists and is readable."""
@@ -126,7 +124,7 @@ class TestActionWorkflow:
         assert script_path.exists(), "entrypoint.sh not found"
 
         # Verify script is readable
-        with open(script_path, 'r') as f:
+        with open(script_path, "r") as f:
             content = f.read()
             assert len(content) > 0
             assert "#!/bin/bash" in content
@@ -142,7 +140,7 @@ class TestActionWorkflow:
             pytest.skip("Dockerfile not found")
 
         # Read Dockerfile and check for key elements
-        with open(dockerfile_path, 'r') as f:
+        with open(dockerfile_path, "r") as f:
             content = f.read()
 
         # Verify key elements for the new multi-stage build

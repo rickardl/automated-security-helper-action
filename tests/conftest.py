@@ -21,7 +21,7 @@ def sample_ash_results():
                         "issue_type": "hardcoded_password_string",
                         "issue_text": "Possible hardcoded password",
                         "line_range": [10, 10],
-                        "more_info": "https://bandit.readthedocs.io/en/latest/plugins/b105_hardcoded_password_string.html"
+                        "more_info": "https://bandit.readthedocs.io/en/latest/plugins/b105_hardcoded_password_string.html",
                     },
                     {
                         "filename": "src/test2.py",
@@ -30,15 +30,10 @@ def sample_ash_results():
                         "confidence": "HIGH",
                         "issue_type": "sql_injection",
                         "issue_text": "Possible SQL injection",
-                        "line_range": [15, 15]
-                    }
+                        "line_range": [15, 15],
+                    },
                 ],
-                "summary": {
-                    "total": 2,
-                    "high": 1,
-                    "medium": 1,
-                    "low": 0
-                }
+                "summary": {"total": 2, "high": 1, "medium": 1, "low": 0},
             },
             "semgrep": {
                 "findings": [
@@ -48,7 +43,7 @@ def sample_ash_results():
                         "severity": "CRITICAL",
                         "rule_id": "javascript.lang.security.audit.dangerous-innerHTML",
                         "message": "Detected innerHTML usage",
-                        "line_range": [25, 27]
+                        "line_range": [25, 27],
                     }
                 ],
                 "summary": {
@@ -56,9 +51,9 @@ def sample_ash_results():
                     "critical": 1,
                     "high": 0,
                     "medium": 0,
-                    "low": 0
-                }
-            }
+                    "low": 0,
+                },
+            },
         },
         "summary": {
             "total_findings": 3,
@@ -66,8 +61,8 @@ def sample_ash_results():
             "high": 1,
             "medium": 1,
             "low": 0,
-            "tools_executed": ["bandit", "semgrep"]
-        }
+            "tools_executed": ["bandit", "semgrep"],
+        },
     }
 
 
@@ -76,52 +71,43 @@ def sample_config():
     """Sample configuration for testing."""
     return {
         "tools": {
-            "bandit": {
-                "enabled": True,
-                "confidence": "high",
-                "severity": "medium"
-            },
-            "semgrep": {
-                "enabled": True,
-                "rulesets": ["auto", "security"]
-            }
+            "bandit": {"enabled": True, "confidence": "high", "severity": "medium"},
+            "semgrep": {"enabled": True, "rulesets": ["auto", "security"]},
         },
         "filters": {
             "severity_threshold": "high",
-            "exclude_paths": ["*/test/*", "*/node_modules/*"]
+            "exclude_paths": ["*/test/*", "*/node_modules/*"],
         },
         "github": {
-            "pr_comments": {
-                "enabled": True,
-                "mode": "review",
-                "format": "sarif"
-            },
-            "sarif_upload": {
-                "enabled": True,
-                "category": "test-scan"
-            }
-        }
+            "pr_comments": {"enabled": True, "mode": "review", "format": "sarif"},
+            "sarif_upload": {"enabled": True, "category": "test-scan"},
+        },
     }
 
 
 @pytest.fixture
 def temp_json_file():
     """Create a temporary JSON file for testing."""
+
     def _create_temp_file(data):
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             json.dump(data, f)
             return f.name
+
     return _create_temp_file
 
 
 @pytest.fixture
 def temp_yaml_file():
     """Create a temporary YAML file for testing."""
+
     def _create_temp_file(data):
         import yaml
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.yml', delete=False) as f:
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yml", delete=False) as f:
             yaml.dump(data, f)
             return f.name
+
     return _create_temp_file
 
 
@@ -157,7 +143,7 @@ def mock_github_env(monkeypatch):
         "GITHUB_SERVER_URL": "https://github.com",
         "GITHUB_API_URL": "https://api.github.com",
         "GITHUB_RUN_ID": "123456789",
-        "GITHUB_OUTPUT": "/tmp/github_output"
+        "GITHUB_OUTPUT": "/tmp/github_output",
     }
 
     for key, value in env_vars.items():
@@ -177,7 +163,7 @@ def sample_sarif():
                 "tool": {
                     "driver": {
                         "name": "AWS Automated Security Helper",
-                        "version": "1.0.0"
+                        "version": "1.0.0",
                     }
                 },
                 "results": [
@@ -185,33 +171,24 @@ def sample_sarif():
                         "ruleId": "bandit.hardcoded_password_string",
                         "ruleIndex": 0,
                         "level": "error",
-                        "message": {
-                            "text": "Possible hardcoded password"
-                        },
+                        "message": {"text": "Possible hardcoded password"},
                         "locations": [
                             {
                                 "physicalLocation": {
-                                    "artifactLocation": {
-                                        "uri": "src/test.py"
-                                    },
-                                    "region": {
-                                        "startLine": 10,
-                                        "endLine": 10
-                                    }
+                                    "artifactLocation": {"uri": "src/test.py"},
+                                    "region": {"startLine": 10, "endLine": 10},
                                 }
                             }
-                        ]
+                        ],
                     }
                 ],
                 "rules": [
                     {
                         "id": "bandit.hardcoded_password_string",
                         "name": "hardcoded_password_string",
-                        "shortDescription": {
-                            "text": "Possible hardcoded password"
-                        }
+                        "shortDescription": {"text": "Possible hardcoded password"},
                     }
-                ]
+                ],
             }
-        ]
+        ],
     }

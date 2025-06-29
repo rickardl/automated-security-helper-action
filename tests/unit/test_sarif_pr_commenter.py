@@ -9,7 +9,7 @@ import os
 from unittest.mock import Mock, patch
 
 # Add src to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../src"))
 
 
 class TestSarifPRCommenter:
@@ -18,9 +18,7 @@ class TestSarifPRCommenter:
     def setup_method(self):
         """Set up test fixtures"""
         self.commenter = SarifPRCommenter(
-            github_token="test-token",
-            repository="test-owner/test-repo",
-            pr_number=123
+            github_token="test-token", repository="test-owner/test-repo", pr_number=123
         )
 
     def test_init(self):
@@ -29,7 +27,7 @@ class TestSarifPRCommenter:
         assert self.commenter.repository == "test-owner/test-repo"
         assert self.commenter.pr_number == 123
 
-    @patch('requests.get')
+    @patch("requests.get")
     def test_get_pr_files_success(self, mock_get):
         """Test successful PR files retrieval"""
         mock_response = Mock()
@@ -61,7 +59,7 @@ class TestSarifPRCommenter:
             "severity": "error",
             "tool_name": "bandit",
             "line_number": 42,
-            "help_uri": "https://cwe.mitre.org/data/definitions/89.html"
+            "help_uri": "https://cwe.mitre.org/data/definitions/89.html",
         }
 
         comment = self.commenter._format_sarif_comment(comment_data)
@@ -74,22 +72,30 @@ class TestSarifPRCommenter:
     def test_extract_comments_from_sarif_success(self):
         """Test extracting comments from SARIF data"""
         sarif_data = {
-            "runs": [{
-                "tool": {"driver": {"name": "bandit"}},
-                "results": [{
-                    "ruleId": "B101",
-                    "level": "error",
-                    "message": {"text": "Hard-coded password"},
-                    "locations": [{
-                        "physicalLocation": {
-                            "artifactLocation": {"uri": "test.py"},
-                            "region": {"startLine": 42}
+            "runs": [
+                {
+                    "tool": {"driver": {"name": "bandit"}},
+                    "results": [
+                        {
+                            "ruleId": "B101",
+                            "level": "error",
+                            "message": {"text": "Hard-coded password"},
+                            "locations": [
+                                {
+                                    "physicalLocation": {
+                                        "artifactLocation": {"uri": "test.py"},
+                                        "region": {"startLine": 42},
+                                    }
+                                }
+                            ],
                         }
-                    }]
-                }]
-            }]
+                    ],
+                }
+            ]
         }
 
-        comments = self.commenter.extract_comments_from_sarif(sarif_data, [{"filename": "test.py"}])
+        comments = self.commenter.extract_comments_from_sarif(
+            sarif_data, [{"filename": "test.py"}]
+        )
 
         assert len(comments) >= 0  # Should not crash

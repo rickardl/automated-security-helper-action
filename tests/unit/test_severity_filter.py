@@ -1,12 +1,15 @@
 """Unit tests for severity filter module."""
 
-from src.core.severity_filter import filter_findings_by_severity, count_findings_by_severity
+from src.core.severity_filter import (
+    filter_findings_by_severity,
+    count_findings_by_severity,
+)
 import pytest
 import sys
 import os
 
 # Add src to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../src"))
 
 
 class TestSeverityFilter:
@@ -20,15 +23,15 @@ class TestSeverityFilter:
                     "findings": [
                         {"severity": "HIGH", "filename": "test1.py"},
                         {"severity": "MEDIUM", "filename": "test2.py"},
-                        {"severity": "LOW", "filename": "test3.py"}
+                        {"severity": "LOW", "filename": "test3.py"},
                     ]
                 },
                 "semgrep": {
                     "findings": [
                         {"severity": "CRITICAL", "filename": "test4.js"},
-                        {"severity": "HIGH", "filename": "test5.js"}
+                        {"severity": "HIGH", "filename": "test5.js"},
                     ]
-                }
+                },
             }
         }
 
@@ -86,7 +89,7 @@ class TestSeverityFilter:
             "high": 2,
             "medium": 1,
             "low": 1,
-            "tools": ["bandit", "semgrep"]
+            "tools": ["bandit", "semgrep"],
         }
 
         assert counts == expected
@@ -102,7 +105,7 @@ class TestSeverityFilter:
             "high": 0,
             "medium": 0,
             "low": 0,
-            "tools": []
+            "tools": [],
         }
 
         assert counts == expected
@@ -125,12 +128,15 @@ class TestSeverityFilter:
         assert "results" in filtered
         assert len(filtered["results"]) == 0
 
-    @pytest.mark.parametrize("severity,expected_count", [
-        ("critical", 1),
-        ("high", 3),
-        ("medium", 4),
-        ("low", 5),
-    ])
+    @pytest.mark.parametrize(
+        "severity,expected_count",
+        [
+            ("critical", 1),
+            ("high", 3),
+            ("medium", 4),
+            ("low", 5),
+        ],
+    )
     def test_severity_threshold_counts(self, severity, expected_count):
         """Test that severity thresholds return correct counts."""
         filtered = filter_findings_by_severity(self.sample_results, severity)

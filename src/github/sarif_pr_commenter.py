@@ -21,7 +21,7 @@ class SarifPRCommenter:
         self.headers = {
             "Authorization": f"token {github_token}",
             "Accept": "application/vnd.github.v3+json",
-            "User-Agent": "AWS-ASH-Action-SARIF/1.0"
+            "User-Agent": "AWS-ASH-Action-SARIF/1.0",
         }
 
     def get_pr_files(self) -> List[Dict[str, Any]]:
@@ -31,7 +31,9 @@ class SarifPRCommenter:
         response.raise_for_status()
         return response.json()
 
-    def calculate_diff_position(self, file_path: str, line_number: int, pr_files: List[Dict]) -> Optional[int]:
+    def calculate_diff_position(
+        self, file_path: str, line_number: int, pr_files: List[Dict]
+    ) -> Optional[int]:
         """Calculate the position in the diff for a given line number"""
         pr_file = next((f for f in pr_files if f["filename"] == file_path), None)
         if not pr_file or not pr_file.get("patch"):
@@ -63,8 +65,13 @@ class SarifPRCommenter:
 
         return None
 
-    def create_review_from_sarif(self, commit_sha: str, sarif_data: Dict[str, Any],
-                                 pr_files: List[Dict], mode: str = "review") -> bool:
+    def create_review_from_sarif(
+        self,
+        commit_sha: str,
+        sarif_data: Dict[str, Any],
+        pr_files: List[Dict],
+        mode: str = "review",
+    ) -> bool:
         """Create PR review comments from SARIF data"""
 
         # Extract comments from SARIF
@@ -81,15 +88,21 @@ class SarifPRCommenter:
         else:
             return self.create_individual_comments(commit_sha, comments, pr_files)
 
-    def extract_comments_from_sarif(self, sarif_data: Dict[str, Any],
-                                    pr_files: List[Dict]) -> List[Dict[str, Any]]:
+    def extract_comments_from_sarif(
+        self, sarif_data: Dict[str, Any], pr_files: List[Dict]
+    ) -> List[Dict[str, Any]]:
         """Extract comment data from SARIF format"""
         comments = []
         changed_files = {f["filename"] for f in pr_files}
 
         for run in sarif_data.get("runs", []):
-            tool_name = run.get("tool", {}).get("driver", {}).get("name", "Security Tool")
-            rules = {rule["id"]: rule for rule in run.get("tool", {}).get("driver", {}).get("rules", [])}
+            tool_name = (
+                run.get("tool", {}).get("driver", {}).get("name", "Security Tool")
+            )
+            rules = {
+                rule["id"]: rule
+                for rule in run.get("tool", {}).get("driver", {}).get("rules", [])
+            }
 
             for result in run.get("results", []):
                 rule_id = result.get("ruleId", "unknown")
@@ -115,13 +128,17 @@ class SarifPRCommenter:
                         "file_path": file_path,
                         "line_number": line_number,
                         "rule_id": rule_id,
-                        "message": result.get("message", {}).get("text", "Security finding detected"),
+                        "message": result.get("message", {}).get(
+                            "text", "Security finding detected"
+                        ),
                         "level": result.get("level", "warning"),
                         "tool_name": tool_name,
                         "rule": rule,
-                        "security_severity": result.get("properties", {}).get("security-severity", "5.0"),
+                        "security_severity": result.get("properties", {}).get(
+                            "security-severity", "5.0"
+                        ),
                         "help_uri": rule.get("helpUri", ""),
-                        "cwe": result.get("properties", {}).get("cwe", "")
+                        "cwe": result.get("properties", {}).get("cwe", ""),
                     }
 
                     comments.append(comment)
@@ -142,16 +159,17 @@ class SarifPRCommenter:
             normalized = normalized[1:]
 
         # Remove common workspace prefixes (for test compatibility)
-        workspace_prefixes = ['workspace/', 'github/workspace/', 'home/runner/work/']
+        workspace_prefixes = ["workspace/", "github/workspace/", "home/runner/work/"]
         for prefix in workspace_prefixes:
             if normalized.startswith(prefix):
-                normalized = normalized[len(prefix):]
+                normalized = normalized[len(prefix) :]
                 break
 
         return normalized
 
-    def create_review_batch(self, commit_sha: str, comments: List[Dict],
-                            pr_files: List[Dict]) -> bool:
+    def create_review_batch(
+        self, commit_sha: str, comments: List[Dict], pr_files: List[Dict]
+    ) -> bool:
         """Create a batch review with multiple comments"""
         review_comments = []
 
@@ -160,11 +178,13 @@ class SarifPRCommenter:
                 comment["file_path"], comment["line_number"], pr_files
             )
             if position is not None:
-                review_comments.append({
-                    "path": comment["file_path"],
-                    "position": position,
-                    "body": self._format_sarif_comment(comment)
-                })
+                review_comments.append(
+                    {
+                        "path": comment["file_path"],
+                        "position": position,
+                        "body": self._format_sarif_comment(comment),
+                    }
+                )
 
         if not review_comments:
             print("⚠️  No valid comments to add to review")
@@ -176,7 +196,7 @@ class SarifPRCommenter:
             "commit_id": commit_sha,
             "body": self._format_review_summary_from_sarif(review_comments, comments),
             "event": "COMMENT",
-            "comments": review_comments
+            "comments": review_comments,
         }
 
         response = requests.post(url, headers=self.headers, json=data)
@@ -187,8 +207,9 @@ class SarifPRCommenter:
             print(f"❌ Failed to create review: {response.text}")
             return False
 
-    def create_individual_comments(self, commit_sha: str, comments: List[Dict],
-                                   pr_files: List[Dict]) -> bool:
+    def create_individual_comments(
+        self, commit_sha: str, comments: List[Dict], pr_files: List[Dict]
+    ) -> bool:
         """Create individual comments for each finding"""
         success_count = 0
 
@@ -197,7 +218,9 @@ class SarifPRCommenter:
                 comment["file_path"], comment["line_number"], pr_files
             )
             if position is None:
-                print(f"⚠️  Could not determine diff position for {comment['file_path']}:{comment['line_number']}")
+                print(
+                    f"⚠️  Could not determine diff position for {comment['file_path']}:{comment['line_number']}"
+                )
                 continue
 
             url = f"{self.api_base}/repos/{self.repository}/pulls/{self.pr_number}/comments"
@@ -205,15 +228,19 @@ class SarifPRCommenter:
                 "body": self._format_sarif_comment(comment),
                 "commit_id": commit_sha,
                 "path": comment["file_path"],
-                "position": position
+                "position": position,
             }
 
             response = requests.post(url, headers=self.headers, json=data)
             if response.status_code == 201:
-                print(f"✅ Added comment to {comment['file_path']}:{comment['line_number']}")
+                print(
+                    f"✅ Added comment to {comment['file_path']}:{comment['line_number']}"
+                )
                 success_count += 1
             else:
-                print(f"❌ Failed to add comment to {comment['file_path']}:{comment['line_number']}: {response.text}")
+                print(
+                    f"❌ Failed to add comment to {comment['file_path']}:{comment['line_number']}: {response.text}"
+                )
 
         return success_count > 0
 
@@ -249,7 +276,7 @@ class SarifPRCommenter:
             f"**Tool:** {comment['tool_name']}",
             f"**Line:** {comment['line_number']}",
             "",
-            comment["message"]
+            comment["message"],
         ]
 
         # Add rule description if available
@@ -268,16 +295,19 @@ class SarifPRCommenter:
         if help_uri:
             comment_parts.extend(["", f"📖 [Learn more]({help_uri})"])
 
-        comment_parts.extend([
-            "",
-            "---",
-            "*Generated by [AWS Automated Security Helper](https://github.com/rickardl/automated-security-helper-action)*"
-        ])
+        comment_parts.extend(
+            [
+                "",
+                "---",
+                "*Generated by [AWS Automated Security Helper](https://github.com/rickardl/automated-security-helper-action)*",
+            ]
+        )
 
         return "\n".join(comment_parts)
 
-    def _format_review_summary_from_sarif(self, review_comments: List[Dict],
-                                          all_comments: List[Dict]) -> str:
+    def _format_review_summary_from_sarif(
+        self, review_comments: List[Dict], all_comments: List[Dict]
+    ) -> str:
         """Format the main review summary from SARIF data"""
 
         # Count findings by severity
@@ -303,31 +333,41 @@ class SarifPRCommenter:
             "## 🛡️ Security Scan Results",
             "",
             f"Found **{len(all_comments)}** security findings in this pull request:",
-            ""
+            "",
         ]
 
         # Add severity breakdown
         for severity, count in severity_counts.items():
             if count > 0:
-                emoji = {"Critical": "🔴", "High": "🟠", "Medium": "🟡", "Low": "🔵", "Info": "ℹ️"}[severity]
+                emoji = {
+                    "Critical": "🔴",
+                    "High": "🟠",
+                    "Medium": "🟡",
+                    "Low": "🔵",
+                    "Info": "ℹ️",
+                }[severity]
                 summary_parts.append(f"- {emoji} **{severity}:** {count}")
 
-        summary_parts.extend([
-            "",
-            f"**Tools:** {', '.join(sorted(tools))}",
-            f"**Inline Comments:** {len(review_comments)}",
-            "",
-            "Please review the inline comments above for detailed information about each finding.",
-            "",
-            "*Generated by [AWS Automated Security Helper](https://github.com/rickardl/automated-security-helper-action)*"
-        ])
+        summary_parts.extend(
+            [
+                "",
+                f"**Tools:** {', '.join(sorted(tools))}",
+                f"**Inline Comments:** {len(review_comments)}",
+                "",
+                "Please review the inline comments above for detailed information about each finding.",
+                "",
+                "*Generated by [AWS Automated Security Helper](https://github.com/rickardl/automated-security-helper-action)*",
+            ]
+        )
 
         return "\n".join(summary_parts)
 
 
 def main():
     if len(sys.argv) != 8:
-        print("Usage: sarif_pr_commenter.py <sarif_file> <workspace_path> <github_token> <repository> <pr_number> <commit_sha> <mode>")
+        print(
+            "Usage: sarif_pr_commenter.py <sarif_file> <workspace_path> <github_token> <repository> <pr_number> <commit_sha> <mode>"
+        )
         sys.exit(1)
 
     sarif_file = sys.argv[1]
@@ -340,7 +380,7 @@ def main():
 
     # Load SARIF data
     try:
-        with open(sarif_file, 'r') as f:
+        with open(sarif_file, "r") as f:
             sarif_data = json.load(f)
     except Exception as e:
         print(f"Error reading SARIF file: {e}")
@@ -354,7 +394,9 @@ def main():
         pr_files = commenter.get_pr_files()
 
         # Create review from SARIF data
-        success = commenter.create_review_from_sarif(commit_sha, sarif_data, pr_files, mode)
+        success = commenter.create_review_from_sarif(
+            commit_sha, sarif_data, pr_files, mode
+        )
 
         if success:
             print("✅ SARIF PR commenting completed successfully")

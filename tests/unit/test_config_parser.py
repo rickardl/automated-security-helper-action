@@ -8,7 +8,7 @@ import sys
 import os
 
 # Add src to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../src"))
 
 
 class TestConfigParser:
@@ -18,42 +18,26 @@ class TestConfigParser:
         """Set up test fixtures."""
         self.sample_config = {
             "tools": {
-                "bandit": {
-                    "enabled": True,
-                    "confidence": "high",
-                    "severity": "medium"
-                },
+                "bandit": {"enabled": True, "confidence": "high", "severity": "medium"},
                 "semgrep": {
                     "enabled": True,
-                    "rulesets": ["auto", "security", "owasp-top-ten"]
+                    "rulesets": ["auto", "security", "owasp-top-ten"],
                 },
-                "checkov": {
-                    "enabled": False
-                }
+                "checkov": {"enabled": False},
             },
             "filters": {
                 "severity_threshold": "high",
-                "exclude_paths": [
-                    "*/node_modules/*",
-                    "*/test/*"
-                ]
+                "exclude_paths": ["*/node_modules/*", "*/test/*"],
             },
             "github": {
-                "pr_comments": {
-                    "enabled": True,
-                    "mode": "review",
-                    "format": "sarif"
-                },
-                "sarif_upload": {
-                    "enabled": True,
-                    "category": "comprehensive-scan"
-                }
-            }
+                "pr_comments": {"enabled": True, "mode": "review", "format": "sarif"},
+                "sarif_upload": {"enabled": True, "category": "comprehensive-scan"},
+            },
         }
 
     def test_load_config_valid_yaml(self):
         """Test loading valid YAML configuration."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.yml', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yml", delete=False) as f:
             yaml.dump(self.sample_config, f)
             config_file = f.name
 
@@ -70,7 +54,7 @@ class TestConfigParser:
 
     def test_load_config_invalid_yaml(self):
         """Test loading invalid YAML configuration."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.yml', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yml", delete=False) as f:
             f.write("invalid: yaml: content: [")
             config_file = f.name
 
@@ -90,9 +74,7 @@ class TestConfigParser:
         """Test validating configuration with invalid structure."""
         invalid_config = {
             "tools": "not_a_dict",
-            "filters": {
-                "severity_threshold": "invalid_severity"
-            }
+            "filters": {"severity_threshold": "invalid_severity"},
         }
 
         is_valid, errors = validate_config(invalid_config)
@@ -118,11 +100,7 @@ class TestConfigParser:
 
     def test_validate_config_invalid_severity_threshold(self):
         """Test validating configuration with invalid severity threshold."""
-        invalid_config = {
-            "filters": {
-                "severity_threshold": "invalid"
-            }
-        }
+        invalid_config = {"filters": {"severity_threshold": "invalid"}}
 
         is_valid, errors = validate_config(invalid_config)
         assert not is_valid
@@ -130,13 +108,7 @@ class TestConfigParser:
 
     def test_validate_config_invalid_pr_comment_mode(self):
         """Test validating configuration with invalid PR comment mode."""
-        invalid_config = {
-            "github": {
-                "pr_comments": {
-                    "mode": "invalid_mode"
-                }
-            }
-        }
+        invalid_config = {"github": {"pr_comments": {"mode": "invalid_mode"}}}
 
         is_valid, errors = validate_config(invalid_config)
         assert not is_valid
@@ -156,7 +128,7 @@ class TestConfigParser:
             "ASH_CONFIG_BANDIT_CONFIDENCE": "high",
             "ASH_CONFIG_BANDIT_SEVERITY": "medium",
             "ASH_CONFIG_SEMGREP_ENABLED": "true",
-            "ASH_CONFIG_CHECKOV_ENABLED": "false"
+            "ASH_CONFIG_CHECKOV_ENABLED": "false",
         }
 
         for var, value in expected_vars.items():
@@ -170,11 +142,7 @@ class TestConfigParser:
 
     def test_export_env_vars_partial_config(self):
         """Test exporting environment variables from partial config."""
-        partial_config = {
-            "filters": {
-                "severity_threshold": "medium"
-            }
-        }
+        partial_config = {"filters": {"severity_threshold": "medium"}}
 
         env_vars = export_env_vars(partial_config)
 
@@ -185,17 +153,8 @@ class TestConfigParser:
     def test_export_env_vars_list_handling(self):
         """Test that list values are properly handled in env vars."""
         config_with_lists = {
-            "tools": {
-                "semgrep": {
-                    "rulesets": ["auto", "security", "owasp-top-ten"]
-                }
-            },
-            "filters": {
-                "exclude_paths": [
-                    "*/node_modules/*",
-                    "*/test/*"
-                ]
-            }
+            "tools": {"semgrep": {"rulesets": ["auto", "security", "owasp-top-ten"]}},
+            "filters": {"exclude_paths": ["*/node_modules/*", "*/test/*"]},
         }
 
         env_vars = export_env_vars(config_with_lists)
@@ -214,11 +173,7 @@ class TestConfigParser:
     @pytest.mark.parametrize("severity", ["critical", "high", "medium", "low"])
     def test_valid_severity_thresholds(self, severity):
         """Test that all valid severity thresholds are accepted."""
-        config = {
-            "filters": {
-                "severity_threshold": severity
-            }
-        }
+        config = {"filters": {"severity_threshold": severity}}
 
         is_valid, errors = validate_config(config)
         assert is_valid
@@ -227,13 +182,7 @@ class TestConfigParser:
     @pytest.mark.parametrize("mode", ["review", "individual"])
     def test_valid_pr_comment_modes(self, mode):
         """Test that all valid PR comment modes are accepted."""
-        config = {
-            "github": {
-                "pr_comments": {
-                    "mode": mode
-                }
-            }
-        }
+        config = {"github": {"pr_comments": {"mode": mode}}}
 
         is_valid, errors = validate_config(config)
         assert is_valid
@@ -242,13 +191,7 @@ class TestConfigParser:
     @pytest.mark.parametrize("format_type", ["sarif", "legacy"])
     def test_valid_pr_comment_formats(self, format_type):
         """Test that all valid PR comment formats are accepted."""
-        config = {
-            "github": {
-                "pr_comments": {
-                    "format": format_type
-                }
-            }
-        }
+        config = {"github": {"pr_comments": {"format": format_type}}}
 
         is_valid, errors = validate_config(config)
         assert is_valid
