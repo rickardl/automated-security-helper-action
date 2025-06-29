@@ -317,45 +317,6 @@ def enhance_run_with_metadata(
 
     run["invocations"] = [invocation]
 
-    # Add informational notifications
-    notifications = [
-        {
-            "level": "note",
-            "message": {
-                "text": f"Successfully analyzed {len(scanned_files)} files "
-                f"for security vulnerabilities"
-            },
-            "descriptor": {"id": "ASH_SCAN_SUMMARY", "name": "ScanCoverageSummary"},
-        }
-    ]
-
-    # Group by file types for more detailed reporting
-    file_types = {}
-    for file_path in scanned_files:
-        ext = file_path.suffix.lower() or "no-extension"
-        file_types[ext] = file_types.get(ext, 0) + 1
-
-    if file_types:
-        # Create readable file type summary
-        type_items = []
-        for ext, count in sorted(file_types.items(), key=lambda x: x[1], reverse=True):
-            display_ext = ext if ext != "no-extension" else "other"
-            type_items.append(f"{count} {display_ext}")
-
-        type_summary = ", ".join(type_items[:5])  # Show top 5 file types
-        if len(file_types) > 5:
-            type_summary += f" and {len(file_types) - 5} other types"
-
-        notifications.append(
-            {
-                "level": "note",
-                "message": {"text": f"File types analyzed: {type_summary}"},
-                "descriptor": {"id": "ASH_FILE_TYPES", "name": "FileTypeBreakdown"},
-            }
-        )
-
-    run["notifications"] = notifications
-
 
 def load_scanned_files_from_ash_list(
     files_list_path: str, source_dir: str
