@@ -250,35 +250,35 @@ runs:
           -e GITHUB_RUN_ID="${{ github.run_id }}" \
           -e GITHUB_OUTPUT="/workspace/${{ inputs.output-directory }}/github_output" \
           ${{ steps.prepare-image.outputs.docker-image }} \
-          "${{ inputs.source-directory }}" \
-          "${{ inputs.output-directory }}" \
-          "${{ inputs.output-format }}" \
-          "${{ inputs.fail-on-findings }}" \
-          "${{ inputs.severity-threshold }}" \
-          "${{ inputs.offline-mode }}" \
-          "${{ inputs.file-extensions }}" \
-          "${{ inputs.exclude-patterns }}" \
-          "${{ inputs.preserve-reports }}" \
-          "${{ inputs.parallel-execution }}" \
-          "${{ inputs.debug }}" \
-          "${{ inputs.quiet }}" \
-          "${{ inputs.sarif-output }}" \
-          "${{ inputs.upload-sarif }}" \
-          "${{ inputs.sarif-category }}" \
-          "${{ inputs.github-token }}" \
-          "${{ inputs.wait-for-processing }}" \
-          "${{ inputs.pr-comment }}" \
-          "${{ inputs.pr-comment-mode }}" \
-          "${{ inputs.pr-comment-format }}" \
-          "${{ inputs.ash-version }}" \
-          "${{ inputs.ash-mode }}" \
-          "${{ inputs.custom-config }}" \
-          "${{ inputs.upload-artifacts }}" \
-          "${{ inputs.artifact-retention-days }}" \
-          "${{ inputs.scanners }}" \
-          "${{ inputs.exclude-scanners }}" \
-          "${{ inputs.ignore-suppressions }}" \
-          "${{ inputs.offline-semgrep-rulesets }}"
+          '${{ inputs.source-directory }}' \
+          '${{ inputs.output-directory }}' \
+          '${{ inputs.output-format }}' \
+          '${{ inputs.fail-on-findings }}' \
+          '${{ inputs.severity-threshold }}' \
+          '${{ inputs.offline-mode }}' \
+          '${{ inputs.file-extensions }}' \
+          '${{ inputs.exclude-patterns }}' \
+          '${{ inputs.preserve-reports }}' \
+          '${{ inputs.parallel-execution }}' \
+          '${{ inputs.debug }}' \
+          '${{ inputs.quiet }}' \
+          '${{ inputs.sarif-output }}' \
+          '${{ inputs.upload-sarif }}' \
+          '${{ inputs.sarif-category }}' \
+          '${{ inputs.github-token }}' \
+          '${{ inputs.wait-for-processing }}' \
+          '${{ inputs.pr-comment }}' \
+          '${{ inputs.pr-comment-mode }}' \
+          '${{ inputs.pr-comment-format }}' \
+          '${{ inputs.ash-version }}' \
+          '${{ inputs.ash-mode }}' \
+          '${{ inputs.custom-config }}' \
+          '${{ inputs.upload-artifacts }}' \
+          '${{ inputs.artifact-retention-days }}' \
+          '${{ inputs.scanners }}' \
+          '${{ inputs.exclude-scanners }}' \
+          '${{ inputs.ignore-suppressions }}' \
+          '${{ inputs.offline-semgrep-rulesets }}'
 
         # Extract outputs from the container
         if [ -f "${{ github.workspace }}/${{ inputs.output-directory }}/github_output" ]; then
