@@ -311,8 +311,10 @@ SARIF_PATH=""
 SARIF_ID=""
 if [[ "${SARIF_OUTPUT}" == "true" ]] && [[ -f "${SARIF_RESULTS_FILE}" ]]; then
     echo "::group::Using native SARIF output from ASH v3"
-    SARIF_PATH="${SARIF_RESULTS_FILE}"
-    echo "SARIF file available: ${SARIF_PATH}"
+    # Convert container path to host path for GitHub Actions
+    SARIF_PATH="${SARIF_RESULTS_FILE#${GITHUB_WORKSPACE}/}"
+    echo "SARIF file available: ${SARIF_RESULTS_FILE} (container path)"
+    echo "SARIF file host path: ${SARIF_PATH}"
     echo "::endgroup::"
 
     # Note: SARIF upload is now handled by the official GitHub upload-sarif action in action.yml
@@ -382,7 +384,11 @@ fi
 if [[ -n "${GITHUB_OUTPUT}" ]]; then
     # Ensure the output file directory exists
     mkdir -p "$(dirname "${GITHUB_OUTPUT}")"
-    echo "scan-results-path=${RESULTS_FILE}" >> "${GITHUB_OUTPUT}"
+
+    # Convert container paths to host paths for GitHub Actions
+    RESULTS_HOST_PATH="${RESULTS_FILE#${GITHUB_WORKSPACE}/}"
+
+    echo "scan-results-path=${RESULTS_HOST_PATH}" >> "${GITHUB_OUTPUT}"
     echo "findings-count=${TOTAL_FINDINGS}" >> "${GITHUB_OUTPUT}"
     echo "critical-findings=${CRITICAL_FINDINGS}" >> "${GITHUB_OUTPUT}"
     echo "high-findings=${HIGH_FINDINGS}" >> "${GITHUB_OUTPUT}"
@@ -395,6 +401,7 @@ if [[ -n "${GITHUB_OUTPUT}" ]]; then
 
     echo "::debug::GitHub outputs written to: ${GITHUB_OUTPUT}"
     echo "::debug::SARIF path output: ${SARIF_PATH}"
+    echo "::debug::Results path output: ${RESULTS_HOST_PATH}"
 fi
 
 # Create GitHub Step Summary
