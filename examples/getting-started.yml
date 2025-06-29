@@ -26,6 +26,7 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
+      actions: read          # Required to upload SARIF file to CodeQL
       contents: read
       security-events: write  # Required for SARIF upload
       pull-requests: write   # Required for PR comments

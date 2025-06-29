@@ -6,6 +6,7 @@ on:
     branches: [ main ]
 
 permissions:
+  actions: read           # Required to upload SARIF file to CodeQL
   contents: read
   security-events: write
   pull-requests: write
