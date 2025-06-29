@@ -288,6 +288,30 @@ runs:
         # Add cache status to outputs
         echo "cache-enabled=${{ inputs.enable-caching }}" >> $GITHUB_OUTPUT
 
+    - name: Fix cache directory ownership
+      id: fix-cache-ownership
+      if: inputs.enable-caching == 'true'
+      shell: bash
+      run: |
+        # Fix ownership of cache directories after Docker run
+        # This ensures the cache step can create tar archives without permission errors
+        echo "Fixing ownership of cache directories..."
+
+        # Use sudo to change ownership back to runner user
+        if [[ -d "$HOME/.cache" ]]; then
+          sudo chown -R $(id -u):$(id -g) "$HOME/.cache" || echo "Warning: Could not fix ~/.cache ownership"
+        fi
+
+        if [[ -d "$HOME/.local" ]]; then
+          sudo chown -R $(id -u):$(id -g) "$HOME/.local" || echo "Warning: Could not fix ~/.local ownership"
+        fi
+
+        if [[ -d "/tmp/ash-cache" ]]; then
+          sudo chown -R $(id -u):$(id -g) "/tmp/ash-cache" || echo "Warning: Could not fix /tmp/ash-cache ownership"
+        fi
+
+        echo "Cache directory ownership fixed successfully"
+
     - name: Upload SARIF to GitHub Security
       if: >
         inputs.upload-sarif == 'true' &&
