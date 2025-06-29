@@ -1,0 +1,90 @@
+# CodeQL Advanced Security Analysis
+# Performs static analysis to identify potential security vulnerabilities
+# and code quality issues in the AWS Automated Security Helper Action
+
+name: "CodeQL Advanced"
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+    # Only run on code changes, not documentation
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - 'examples/**'
+  pull_request:
+    branches: [ "main", "develop" ]
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - 'examples/**'
+  schedule:
+    # Run weekly security scans on Thursdays at 8:24 AM UTC
+    - cron: '24 8 * * 4'
+
+jobs:
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    runs-on: ubuntu-latest
+
+    permissions:
+      # Required for all workflows
+      security-events: write
+      # Required to fetch internal or private CodeQL packs
+      packages: read
+      # Required for workflows in private repositories
+      actions: read
+      contents: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+        # Analyze GitHub Actions workflows and action.yml
+        - language: actions
+          build-mode: none
+        # Analyze Python code in scripts and source
+        - language: python
+          build-mode: none
+        # Note: CodeQL supports these languages:
+        # 'actions', 'c-cpp', 'csharp', 'go', 'java-kotlin',
+        # 'javascript-typescript', 'python', 'ruby', 'swift'
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    # Initialize the CodeQL tools for scanning
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: ${{ matrix.language }}
+        build-mode: ${{ matrix.build-mode }}
+        # Use security-extended queries for comprehensive analysis
+        queries: security-extended,security-and-quality
+
+    # No manual build required for Python and Actions (interpreted languages)
+    - if: matrix.build-mode == 'manual'
+      shell: bash
+      run: |
+        echo 'Manual build mode not required for this project'
+        echo 'Python and GitHub Actions are interpreted languages'
+        exit 0
+
+    # Perform the actual CodeQL analysis
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
+      with:
+        category: "/language:${{matrix.language}}"
+        # Upload results even if there are no findings
+        upload: true
+
+    # Add summary of analysis to workflow output
+    - name: CodeQL Analysis Summary
+      if: always()
+      run: |
+        echo "## CodeQL Analysis Completed" >> $GITHUB_STEP_SUMMARY
+        echo "- **Language:** ${{ matrix.language }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Build Mode:** ${{ matrix.build-mode }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Queries:** security-extended, security-and-quality" >> $GITHUB_STEP_SUMMARY
+        echo "- **Results:** Check the Security tab for detailed findings" >> $GITHUB_STEP_SUMMARY
