@@ -11,7 +11,7 @@ except ImportError:
     yaml = None
 import os
 import sys
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 
 def load_config(config_path: Optional[str] = None) -> Dict[str, Any]:

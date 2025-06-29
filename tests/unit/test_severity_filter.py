@@ -1,12 +1,14 @@
 """Unit tests for severity filter module."""
 
-from src.core.severity_filter import (
-    filter_findings_by_severity,
-    count_findings_by_severity,
-)
-import pytest
-import sys
 import os
+import sys
+
+import pytest
+
+from src.core.severity_filter import (
+    count_findings_by_severity,
+    filter_findings_by_severity,
+)
 
 # Add src to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../src"))

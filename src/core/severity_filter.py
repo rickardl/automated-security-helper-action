@@ -9,7 +9,7 @@ and filter based on threshold criteria.
 import json
 import sys
 from pathlib import Path
-from typing import Dict, List, Any, Union
+from typing import Any, Dict, List, Union
 
 
 def filter_findings_by_severity(

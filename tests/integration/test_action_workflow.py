@@ -1,9 +1,10 @@
 """Simplified integration tests for the action workflow."""
 
 import os
-import pytest
 import sys
 from pathlib import Path
+
+import pytest
 
 # Add src to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../src"))
@@ -15,8 +16,8 @@ class TestActionWorkflow:
     def test_severity_filtering_integration(self):
         """Test severity filtering integration."""
         from src.core.severity_filter import (
-            filter_findings_by_severity,
             count_findings_by_severity,
+            filter_findings_by_severity,
         )
 
         # Sample test data
@@ -46,7 +47,7 @@ class TestActionWorkflow:
 
     def test_config_parser_integration(self):
         """Test configuration parser integration."""
-        from src.core.config_parser import validate_config, export_env_vars
+        from src.core.config_parser import export_env_vars, validate_config
 
         # Sample configuration
         config = {
@@ -105,8 +106,7 @@ class TestActionWorkflow:
         """Test that Python modules can be imported correctly."""
         # Test core module imports
         try:
-            from src.core import severity_filter
-            from src.core import config_parser
+            from src.core import config_parser, severity_filter
         except ImportError as e:
             pytest.fail(f"Failed to import modules: {e}")
 

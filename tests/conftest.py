@@ -1,9 +1,10 @@
 """Pytest configuration and shared fixtures."""
 
-import pytest
 import json
-import tempfile
 import os
+import tempfile
+
+import pytest
 
 
 @pytest.fixture

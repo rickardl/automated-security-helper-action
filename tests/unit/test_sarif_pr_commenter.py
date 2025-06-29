@@ -3,10 +3,11 @@
 Simplified unit tests for SARIF PR commenter module
 """
 
-from src.github.sarif_pr_commenter import SarifPRCommenter
-import sys
 import os
+import sys
 from unittest.mock import Mock, patch
+
+from src.github.sarif_pr_commenter import SarifPRCommenter
 
 # Add src to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../src"))

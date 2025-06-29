@@ -6,10 +6,11 @@ Based on best practices from existing SARIF-to-comment tools
 """
 
 import json
-import sys
-import requests
 import re
-from typing import Dict, List, Optional, Any
+import sys
+from typing import Any, Dict, List, Optional
+
+import requests
 
 
 class SarifPRCommenter:

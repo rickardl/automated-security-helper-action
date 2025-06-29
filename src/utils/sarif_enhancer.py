@@ -10,14 +10,14 @@ Author: AWS Automated Security Helper Action
 License: MIT
 """
 
+import hashlib
 import json
+import mimetypes
 import os
 import sys
-import mimetypes
-import hashlib
-from pathlib import Path
 from datetime import datetime, timezone
-from typing import List, Dict, Any, Optional
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 
 def discover_scannable_files(source_dir: str) -> List[Path]:

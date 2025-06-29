@@ -6,10 +6,11 @@ Creates inline comments on pull requests for security findings
 
 import json
 import os
-import sys
-import requests
 import re
+import sys
 from typing import Dict, List, Optional
+
+import requests
 
 
 class GitHubPRCommenter:
