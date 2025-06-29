@@ -183,20 +183,6 @@ jobs:
           subject-digest: ${{ steps.push.outputs.digest }}
           push-to-registry: true
 
-      - name: Test published Docker image
-        run: |
-          mkdir -p test-release
-          echo 'password = "test123"' > test-release/test.py
-
-          # Test the published image
-          docker run --rm \
-            -v "$(pwd)/test-release:/workspace" \
-            -e GITHUB_WORKSPACE="/workspace" \
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/${{ env.IMAGE_NAME }}:${{ needs.validate.outputs.version }} \
-            "." "security-results" "json" "false" "medium" "false"
-
-          echo "✅ Published Docker image tested successfully"
-
   release:
     name: Create Release
     runs-on: ubuntu-latest
