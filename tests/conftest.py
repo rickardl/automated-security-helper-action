@@ -4,7 +4,6 @@ import pytest
 import json
 import tempfile
 import os
-from pathlib import Path
 
 
 @pytest.fixture
@@ -130,13 +129,13 @@ def temp_yaml_file():
 def cleanup_files():
     """Cleanup temporary files after tests."""
     files_to_cleanup = []
-    
+
     def _add_file(filepath):
         files_to_cleanup.append(filepath)
         return filepath
-    
+
     yield _add_file
-    
+
     # Cleanup
     for filepath in files_to_cleanup:
         try:
@@ -160,10 +159,10 @@ def mock_github_env(monkeypatch):
         "GITHUB_RUN_ID": "123456789",
         "GITHUB_OUTPUT": "/tmp/github_output"
     }
-    
+
     for key, value in env_vars.items():
         monkeypatch.setenv(key, value)
-    
+
     return env_vars
 
 

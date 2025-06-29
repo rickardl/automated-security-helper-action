@@ -95,7 +95,7 @@ def discover_scannable_files(source_dir: str) -> List[Path]:
             if (file_path.suffix.lower() in scannable_extensions or
                 file_path.name in scannable_extensions or
                 file_name_lower in special_files or
-                any(pattern in file_name_lower for pattern in ['dockerfile', 'makefile'])):
+                    any(pattern in file_name_lower for pattern in ['dockerfile', 'makefile'])):
 
                 # Skip common exclusions
                 if should_exclude_file(file_path, source_path):
@@ -236,7 +236,7 @@ def enhance_run_with_metadata(run: Dict[str, Any], source_dir: str,
             'level': 'note',
             'message': {
                 'text': f'Successfully analyzed {len(scanned_files)} files '
-                       f'for security vulnerabilities'
+                f'for security vulnerabilities'
             },
             'descriptor': {
                 'id': 'ASH_SCAN_SUMMARY',
@@ -449,9 +449,9 @@ def enhance_rules_metadata(run: Dict[str, Any]) -> None:
                     'help': {
                         'text': 'Review this finding and address any security concerns.',
                         'markdown': (f'## {rule_id}\n\n'
-                                   f'This security finding was detected by AWS Automated '
-                                   f'Security Helper. Please review the identified issue and '
-                                   f'take appropriate action to address any security concerns.')
+                                     f'This security finding was detected by AWS Automated '
+                                     f'Security Helper. Please review the identified issue and '
+                                     f'take appropriate action to address any security concerns.')
                     },
                     'defaultConfiguration': {
                         'level': 'warning'
@@ -614,7 +614,7 @@ def validate_github_limits(sarif: Dict[str, Any]) -> bool:
     for i, run in enumerate(sarif['runs']):
         # Check results per run (max 25,000)
         if 'results' in run and len(run['results']) > 25000:
-            print(f"Warning: Run {i+1} has {len(run['results'])} results, "
+            print(f"Warning: Run {i + 1} has {len(run['results'])} results, "
                   f"GitHub maximum is 25,000", file=sys.stderr)
             return False
 
@@ -622,13 +622,13 @@ def validate_github_limits(sarif: Dict[str, Any]) -> bool:
         if 'tool' in run and 'driver' in run['tool'] and 'rules' in run['tool']['driver']:
             rules_count = len(run['tool']['driver']['rules'])
             if rules_count > 25000:
-                print(f"Warning: Run {i+1} has {rules_count} rules, "
+                print(f"Warning: Run {i + 1} has {rules_count} rules, "
                       f"GitHub maximum is 25,000", file=sys.stderr)
                 return False
 
         # Check artifacts count (max 25,000)
         if 'artifacts' in run and len(run['artifacts']) > 25000:
-            print(f"Warning: Run {i+1} has {len(run['artifacts'])} artifacts, "
+            print(f"Warning: Run {i + 1} has {len(run['artifacts'])} artifacts, "
                   f"GitHub maximum is 25,000", file=sys.stderr)
             return False
 

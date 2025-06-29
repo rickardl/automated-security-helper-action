@@ -111,7 +111,7 @@ def main():
         sys.exit(1)
 
     json_file = sys.argv[1]
-    threshold = sys.argv[2] if len(sys.argv) > 2 else 'medium'
+    sys.argv[2] if len(sys.argv) > 2 else 'medium'
 
     if not Path(json_file).exists():
         print(f"JSON file not found: {json_file}", file=sys.stderr)

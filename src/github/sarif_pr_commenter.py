@@ -6,13 +6,10 @@ Based on best practices from existing SARIF-to-comment tools
 """
 
 import json
-import os
 import sys
 import requests
 import re
-from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Any
-from urllib.parse import quote
+from typing import Dict, List, Optional, Any
 
 
 class SarifPRCommenter:
@@ -67,7 +64,7 @@ class SarifPRCommenter:
         return None
 
     def create_review_from_sarif(self, commit_sha: str, sarif_data: Dict[str, Any],
-                               pr_files: List[Dict], mode: str = "review") -> bool:
+                                 pr_files: List[Dict], mode: str = "review") -> bool:
         """Create PR review comments from SARIF data"""
 
         # Extract comments from SARIF
@@ -85,7 +82,7 @@ class SarifPRCommenter:
             return self.create_individual_comments(commit_sha, comments, pr_files)
 
     def extract_comments_from_sarif(self, sarif_data: Dict[str, Any],
-                                  pr_files: List[Dict]) -> List[Dict[str, Any]]:
+                                    pr_files: List[Dict]) -> List[Dict[str, Any]]:
         """Extract comment data from SARIF format"""
         comments = []
         changed_files = {f["filename"] for f in pr_files}
@@ -154,7 +151,7 @@ class SarifPRCommenter:
         return normalized
 
     def create_review_batch(self, commit_sha: str, comments: List[Dict],
-                          pr_files: List[Dict]) -> bool:
+                            pr_files: List[Dict]) -> bool:
         """Create a batch review with multiple comments"""
         review_comments = []
 
@@ -191,7 +188,7 @@ class SarifPRCommenter:
             return False
 
     def create_individual_comments(self, commit_sha: str, comments: List[Dict],
-                                 pr_files: List[Dict]) -> bool:
+                                   pr_files: List[Dict]) -> bool:
         """Create individual comments for each finding"""
         success_count = 0
 
@@ -224,7 +221,7 @@ class SarifPRCommenter:
         """Format a SARIF-based security finding as a PR comment"""
 
         # Get severity information - handle both 'level' and 'severity' keys
-        level = comment.get("level", comment.get("severity", "warning"))
+        comment.get("level", comment.get("severity", "warning"))
         security_severity = float(comment.get("security_severity", "5.0"))
 
         # Determine severity level and emoji
@@ -280,7 +277,7 @@ class SarifPRCommenter:
         return "\n".join(comment_parts)
 
     def _format_review_summary_from_sarif(self, review_comments: List[Dict],
-                                        all_comments: List[Dict]) -> str:
+                                          all_comments: List[Dict]) -> str:
         """Format the main review summary from SARIF data"""
 
         # Count findings by severity
@@ -334,7 +331,7 @@ def main():
         sys.exit(1)
 
     sarif_file = sys.argv[1]
-    workspace_path = sys.argv[2]
+    sys.argv[2]
     github_token = sys.argv[3]
     repository = sys.argv[4]
     pr_number = int(sys.argv[5])

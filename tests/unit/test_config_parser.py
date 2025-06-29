@@ -1,16 +1,14 @@
 """Unit tests for config parser module."""
 
+from src.core.config_parser import load_config, validate_config, export_env_vars
 import tempfile
 import yaml
 import pytest
-from unittest.mock import patch, mock_open
 import sys
 import os
 
 # Add src to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../src'))
-
-from src.core.config_parser import load_config, validate_config, export_env_vars
 
 
 class TestConfigParser:
@@ -58,7 +56,7 @@ class TestConfigParser:
         with tempfile.NamedTemporaryFile(mode='w', suffix='.yml', delete=False) as f:
             yaml.dump(self.sample_config, f)
             config_file = f.name
-        
+
         try:
             config = load_config(config_file)
             assert config == self.sample_config
@@ -75,7 +73,7 @@ class TestConfigParser:
         with tempfile.NamedTemporaryFile(mode='w', suffix='.yml', delete=False) as f:
             f.write("invalid: yaml: content: [")
             config_file = f.name
-        
+
         try:
             config = load_config(config_file)
             assert config == {}
@@ -96,7 +94,7 @@ class TestConfigParser:
                 "severity_threshold": "invalid_severity"
             }
         }
-        
+
         is_valid, errors = validate_config(invalid_config)
         assert not is_valid
         assert len(errors) > 0
@@ -113,7 +111,7 @@ class TestConfigParser:
                 }
             }
         }
-        
+
         is_valid, errors = validate_config(minimal_config)
         # Should still be valid as most fields are optional
         assert is_valid
@@ -125,7 +123,7 @@ class TestConfigParser:
                 "severity_threshold": "invalid"
             }
         }
-        
+
         is_valid, errors = validate_config(invalid_config)
         assert not is_valid
         assert any("severity_threshold" in error for error in errors)
@@ -139,7 +137,7 @@ class TestConfigParser:
                 }
             }
         }
-        
+
         is_valid, errors = validate_config(invalid_config)
         assert not is_valid
         assert any("mode" in error for error in errors)
@@ -147,7 +145,7 @@ class TestConfigParser:
     def test_export_env_vars_complete(self):
         """Test exporting environment variables from complete config."""
         env_vars = export_env_vars(self.sample_config)
-        
+
         # Check that environment variables are properly set
         expected_vars = {
             "ASH_CONFIG_SEVERITY_THRESHOLD": "high",
@@ -160,7 +158,7 @@ class TestConfigParser:
             "ASH_CONFIG_SEMGREP_ENABLED": "true",
             "ASH_CONFIG_CHECKOV_ENABLED": "false"
         }
-        
+
         for var, value in expected_vars.items():
             assert var in env_vars
             assert env_vars[var] == value
@@ -177,9 +175,9 @@ class TestConfigParser:
                 "severity_threshold": "medium"
             }
         }
-        
+
         env_vars = export_env_vars(partial_config)
-        
+
         assert "ASH_CONFIG_SEVERITY_THRESHOLD" in env_vars
         assert env_vars["ASH_CONFIG_SEVERITY_THRESHOLD"] == "medium"
         assert len(env_vars) == 1
@@ -199,20 +197,19 @@ class TestConfigParser:
                 ]
             }
         }
-        
+
         env_vars = export_env_vars(config_with_lists)
-        
+
         # Lists should be converted to comma-separated strings
         assert "ASH_CONFIG_SEMGREP_RULESETS" in env_vars
         assert env_vars["ASH_CONFIG_SEMGREP_RULESETS"] == "auto,security,owasp-top-ten"
-        
+
         assert "ASH_CONFIG_EXCLUDE_PATHS" in env_vars
         assert env_vars["ASH_CONFIG_EXCLUDE_PATHS"] == "*/node_modules/*,*/test/*"
 
     def test_config_override_precedence(self):
         """Test that configuration values override action inputs properly."""
         # This would be tested in integration tests or through environment variable checks
-        pass
 
     @pytest.mark.parametrize("severity", ["critical", "high", "medium", "low"])
     def test_valid_severity_thresholds(self, severity):
@@ -222,7 +219,7 @@ class TestConfigParser:
                 "severity_threshold": severity
             }
         }
-        
+
         is_valid, errors = validate_config(config)
         assert is_valid
         assert len(errors) == 0
@@ -237,7 +234,7 @@ class TestConfigParser:
                 }
             }
         }
-        
+
         is_valid, errors = validate_config(config)
         assert is_valid
         assert len(errors) == 0
@@ -252,7 +249,7 @@ class TestConfigParser:
                 }
             }
         }
-        
+
         is_valid, errors = validate_config(config)
         assert is_valid
         assert len(errors) == 0

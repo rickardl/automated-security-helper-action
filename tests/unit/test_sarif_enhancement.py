@@ -12,7 +12,7 @@ from pathlib import Path
 # Add the src directory to the path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'src'))
 
-from utils.sarif_enhancer import (
+from utils.sarif_enhancer import (  # noqa: E402
     enhance_sarif_with_file_coverage,
     load_scanned_files_from_ash_list
 )

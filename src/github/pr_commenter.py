@@ -9,8 +9,7 @@ import os
 import sys
 import requests
 import re
-from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 
 class GitHubPRCommenter:
@@ -95,7 +94,7 @@ class GitHubPRCommenter:
         return None
 
     def create_review_comment(self, commit_sha: str, file_path: str, line_number: int,
-                           message: str, severity: str, tool: str, pr_files: List[Dict]) -> bool:
+                              message: str, severity: str, tool: str, pr_files: List[Dict]) -> bool:
         """Create a single review comment"""
         position = self.calculate_diff_position(file_path, line_number, pr_files)
         if position is None:
@@ -192,11 +191,11 @@ class GitHubPRCommenter:
             severity_counts[severity] = severity_counts.get(severity, 0) + 1
             tools.add(comment["tool"])
 
-        summary = f"## 🛡️ Security Scan Results\n\n"
+        summary = "## 🛡️ Security Scan Results\n\n"
         summary += f"Found **{comment_count}** security findings in this pull request:\n\n"
 
         for severity, count in sorted(severity_counts.items(),
-                                    key=lambda x: ["critical", "high", "medium", "low", "info"].index(x[0])):
+                                      key=lambda x: ["critical", "high", "medium", "low", "info"].index(x[0])):
             emoji = {"critical": "🔴", "high": "🟠", "medium": "🟡", "low": "🔵", "info": "ℹ️"}.get(severity, "⚠️")
             summary += f"- {emoji} **{severity.title()}:** {count}\n"
 

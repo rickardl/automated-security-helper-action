@@ -1,8 +1,6 @@
 """Simplified integration tests for the action workflow."""
 
-import json
 import os
-import subprocess
 import pytest
 import sys
 from pathlib import Path
@@ -111,8 +109,6 @@ class TestActionWorkflow:
         try:
             from src.core import severity_filter
             from src.core import config_parser
-            from src.github import pr_commenter
-            from src.github import sarif_pr_commenter
         except ImportError as e:
             pytest.fail(f"Failed to import modules: {e}")
 
