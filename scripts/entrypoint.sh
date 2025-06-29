@@ -310,7 +310,39 @@ fi
 SARIF_PATH=""
 SARIF_ID=""
 if [[ "${SARIF_OUTPUT}" == "true" ]] && [[ -f "${SARIF_RESULTS_FILE}" ]]; then
-    echo "::group::Using native SARIF output from ASH v3"
+    echo "::group::Processing and enhancing SARIF output from ASH v3"
+
+    # Look for ASH's scanned files list
+    SCANNED_FILES_LIST="${OUTPUT_DIR}/ash-scan-set-files-list.txt"
+
+    # Enhance SARIF with comprehensive file coverage
+    if [[ -f "${SCANNED_FILES_LIST}" ]]; then
+        echo "Enhancing SARIF with ASH's actual scanned files list..."
+        python3 /action/src/utils/sarif_enhancer.py \
+            "${SARIF_RESULTS_FILE}" \
+            "${GITHUB_WORKSPACE}" \
+            "${SARIF_RESULTS_FILE}" \
+            "${SCANNED_FILES_LIST}"
+
+        if [[ $? -eq 0 ]]; then
+            echo "✅ Successfully enhanced SARIF with comprehensive file coverage"
+        else
+            echo "⚠️ Failed to enhance SARIF, using original file"
+        fi
+    else
+        echo "Enhancing SARIF with heuristic file discovery (no ASH files list found)..."
+        python3 /action/src/utils/sarif_enhancer.py \
+            "${SARIF_RESULTS_FILE}" \
+            "${GITHUB_WORKSPACE}" \
+            "${SARIF_RESULTS_FILE}"
+
+        if [[ $? -eq 0 ]]; then
+            echo "✅ Successfully enhanced SARIF with heuristic file discovery"
+        else
+            echo "⚠️ Failed to enhance SARIF, using original file"
+        fi
+    fi
+
     # Convert container path to host path for GitHub Actions
     SARIF_PATH="${SARIF_RESULTS_FILE#${GITHUB_WORKSPACE}/}"
     echo "SARIF file available: ${SARIF_RESULTS_FILE} (container path)"
@@ -322,7 +354,7 @@ if [[ "${SARIF_OUTPUT}" == "true" ]] && [[ -f "${SARIF_RESULTS_FILE}" ]]; then
 
     # Note: SARIF upload is now handled by the official GitHub upload-sarif action in action.yml
     if [[ "${UPLOAD_SARIF}" == "true" ]]; then
-        echo "📤 SARIF file available at ${SARIF_PATH} and will be uploaded by the official GitHub upload-sarif action"
+        echo "📤 Enhanced SARIF file available at ${SARIF_PATH} and will be uploaded by the official GitHub upload-sarif action"
         echo "🔍 Results will be available in the Security tab: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/security/code-scanning"
     fi
 else
