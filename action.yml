@@ -249,36 +249,36 @@ runs:
           -e GITHUB_API_URL="${{ github.api_url }}" \
           -e GITHUB_RUN_ID="${{ github.run_id }}" \
           -e GITHUB_OUTPUT="/workspace/${{ inputs.output-directory }}/github_output" \
-          ${{ steps.prepare-image.outputs.docker-image }} \
-          '${{ inputs.source-directory }}' \
-          '${{ inputs.output-directory }}' \
-          '${{ inputs.output-format }}' \
-          '${{ inputs.fail-on-findings }}' \
-          '${{ inputs.severity-threshold }}' \
-          '${{ inputs.offline-mode }}' \
-          '${{ inputs.file-extensions }}' \
-          '${{ inputs.exclude-patterns }}' \
-          '${{ inputs.preserve-reports }}' \
-          '${{ inputs.parallel-execution }}' \
-          '${{ inputs.debug }}' \
-          '${{ inputs.quiet }}' \
-          '${{ inputs.sarif-output }}' \
-          '${{ inputs.upload-sarif }}' \
-          '${{ inputs.sarif-category }}' \
-          '${{ inputs.github-token }}' \
-          '${{ inputs.wait-for-processing }}' \
-          '${{ inputs.pr-comment }}' \
-          '${{ inputs.pr-comment-mode }}' \
-          '${{ inputs.pr-comment-format }}' \
-          '${{ inputs.ash-version }}' \
-          '${{ inputs.ash-mode }}' \
-          '${{ inputs.custom-config }}' \
-          '${{ inputs.upload-artifacts }}' \
-          '${{ inputs.artifact-retention-days }}' \
-          '${{ inputs.scanners }}' \
-          '${{ inputs.exclude-scanners }}' \
-          '${{ inputs.ignore-suppressions }}' \
-          '${{ inputs.offline-semgrep-rulesets }}'
+          -e ASH_SOURCE_DIR="${{ inputs.source-directory }}" \
+          -e ASH_OUTPUT_DIR="${{ inputs.output-directory }}" \
+          -e ASH_OUTPUT_FORMAT="${{ inputs.output-format }}" \
+          -e ASH_FAIL_ON_FINDINGS="${{ inputs.fail-on-findings }}" \
+          -e ASH_SEVERITY_THRESHOLD="${{ inputs.severity-threshold }}" \
+          -e ASH_OFFLINE_MODE="${{ inputs.offline-mode }}" \
+          -e ASH_FILE_EXTENSIONS="${{ inputs.file-extensions }}" \
+          -e ASH_EXCLUDE_PATTERNS="${{ inputs.exclude-patterns }}" \
+          -e ASH_PRESERVE_REPORTS="${{ inputs.preserve-reports }}" \
+          -e ASH_PARALLEL_EXECUTION="${{ inputs.parallel-execution }}" \
+          -e ASH_DEBUG="${{ inputs.debug }}" \
+          -e ASH_QUIET="${{ inputs.quiet }}" \
+          -e ASH_SARIF_OUTPUT="${{ inputs.sarif-output }}" \
+          -e ASH_UPLOAD_SARIF="${{ inputs.upload-sarif }}" \
+          -e ASH_SARIF_CATEGORY="${{ inputs.sarif-category }}" \
+          -e ASH_GITHUB_TOKEN="${{ inputs.github-token }}" \
+          -e ASH_WAIT_FOR_PROCESSING="${{ inputs.wait-for-processing }}" \
+          -e ASH_PR_COMMENT="${{ inputs.pr-comment }}" \
+          -e ASH_PR_COMMENT_MODE="${{ inputs.pr-comment-mode }}" \
+          -e ASH_PR_COMMENT_FORMAT="${{ inputs.pr-comment-format }}" \
+          -e ASH_VERSION="${{ inputs.ash-version }}" \
+          -e ASH_MODE="${{ inputs.ash-mode }}" \
+          -e ASH_CUSTOM_CONFIG="${{ inputs.custom-config }}" \
+          -e ASH_UPLOAD_ARTIFACTS="${{ inputs.upload-artifacts }}" \
+          -e ASH_ARTIFACT_RETENTION_DAYS="${{ inputs.artifact-retention-days }}" \
+          -e ASH_SCANNERS="${{ inputs.scanners }}" \
+          -e ASH_EXCLUDE_SCANNERS="${{ inputs.exclude-scanners }}" \
+          -e ASH_IGNORE_SUPPRESSIONS="${{ inputs.ignore-suppressions }}" \
+          -e ASH_OFFLINE_SEMGREP_RULESETS="${{ inputs.offline-semgrep-rulesets }}" \
+          ${{ steps.prepare-image.outputs.docker-image }}
 
         # Extract outputs from the container
         if [ -f "${{ github.workspace }}/${{ inputs.output-directory }}/github_output" ]; then
