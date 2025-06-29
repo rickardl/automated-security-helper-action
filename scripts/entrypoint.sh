@@ -8,8 +8,12 @@ OUTPUT_FORMAT="${ASH_OUTPUT_FORMAT:-text}"
 FAIL_ON_FINDINGS="${ASH_FAIL_ON_FINDINGS:-true}"
 SEVERITY_THRESHOLD="${ASH_SEVERITY_THRESHOLD:-medium}"
 OFFLINE_MODE="${ASH_OFFLINE_MODE:-false}"
+# These variables are reserved for future features
+# shellcheck disable=SC2034
 FILE_EXTENSIONS="${ASH_FILE_EXTENSIONS:-}"
+# shellcheck disable=SC2034
 EXCLUDE_PATTERNS="${ASH_EXCLUDE_PATTERNS:-}"
+# shellcheck disable=SC2034
 PRESERVE_REPORTS="${ASH_PRESERVE_REPORTS:-false}"
 PARALLEL_EXECUTION="${ASH_PARALLEL_EXECUTION:-true}"
 DEBUG="${ASH_DEBUG:-false}"
@@ -18,6 +22,7 @@ SARIF_OUTPUT="${ASH_SARIF_OUTPUT:-true}"
 UPLOAD_SARIF="${ASH_UPLOAD_SARIF:-true}"
 SARIF_CATEGORY="${ASH_SARIF_CATEGORY:-automated-security-helper}"
 GITHUB_TOKEN="${ASH_GITHUB_TOKEN:-}"
+# shellcheck disable=SC2034
 WAIT_FOR_PROCESSING="${ASH_WAIT_FOR_PROCESSING:-true}"
 PR_COMMENT="${ASH_PR_COMMENT:-true}"
 PR_COMMENT_MODE="${ASH_PR_COMMENT_MODE:-review}"
@@ -26,6 +31,7 @@ ASH_VERSION="${ASH_VERSION:-latest}"
 ASH_MODE="${ASH_MODE:-local}"
 CUSTOM_CONFIG="${ASH_CUSTOM_CONFIG:-}"
 UPLOAD_ARTIFACTS="${ASH_UPLOAD_ARTIFACTS:-true}"
+# shellcheck disable=SC2034
 ARTIFACT_RETENTION_DAYS="${ASH_ARTIFACT_RETENTION_DAYS:-30}"
 SCANNERS="${ASH_SCANNERS:-}"
 EXCLUDE_SCANNERS="${ASH_EXCLUDE_SCANNERS:-}"
@@ -267,11 +273,13 @@ if [[ -f "${JSON_RESULTS_FILE}" ]] && [[ ! -f "${RESULTS_FILE}" ]]; then
     echo "Creating fallback text summary from JSON results"
     mkdir -p "${OUTPUT_DIR}/reports"
     RESULTS_FILE="${OUTPUT_DIR}/reports/ash.summary.txt"
-    echo "ASH v3 Security Scan Results" > "${RESULTS_FILE}"
-    echo "============================" >> "${RESULTS_FILE}"
-    echo "Generated: $(date)" >> "${RESULTS_FILE}"
-    echo "" >> "${RESULTS_FILE}"
-    echo "See ash_aggregated_results.json for detailed results" >> "${RESULTS_FILE}"
+    {
+        echo "ASH v3 Security Scan Results"
+        echo "============================"
+        echo "Generated: $(date)"
+        echo ""
+        echo "See ash_aggregated_results.json for detailed results"
+    } > "${RESULTS_FILE}"
 fi
 
 echo "::endgroup::"
@@ -318,25 +326,21 @@ if [[ "${SARIF_OUTPUT}" == "true" ]] && [[ -f "${SARIF_RESULTS_FILE}" ]]; then
     # Enhance SARIF with comprehensive file coverage
     if [[ -f "${SCANNED_FILES_LIST}" ]]; then
         echo "Enhancing SARIF with ASH's actual scanned files list..."
-        python3 /action/src/utils/sarif_enhancer.py \
+        if python3 /action/src/utils/sarif_enhancer.py \
             "${SARIF_RESULTS_FILE}" \
             "${GITHUB_WORKSPACE}" \
             "${SARIF_RESULTS_FILE}" \
-            "${SCANNED_FILES_LIST}"
-
-        if [[ $? -eq 0 ]]; then
+            "${SCANNED_FILES_LIST}"; then
             echo "✅ Successfully enhanced SARIF with comprehensive file coverage"
         else
             echo "⚠️ Failed to enhance SARIF, using original file"
         fi
     else
         echo "Enhancing SARIF with heuristic file discovery (no ASH files list found)..."
-        python3 /action/src/utils/sarif_enhancer.py \
+        if python3 /action/src/utils/sarif_enhancer.py \
             "${SARIF_RESULTS_FILE}" \
             "${GITHUB_WORKSPACE}" \
-            "${SARIF_RESULTS_FILE}"
-
-        if [[ $? -eq 0 ]]; then
+            "${SARIF_RESULTS_FILE}"; then
             echo "✅ Successfully enhanced SARIF with heuristic file discovery"
         else
             echo "⚠️ Failed to enhance SARIF, using original file"
@@ -344,7 +348,7 @@ if [[ "${SARIF_OUTPUT}" == "true" ]] && [[ -f "${SARIF_RESULTS_FILE}" ]]; then
     fi
 
     # Convert container path to host path for GitHub Actions
-    SARIF_PATH="${SARIF_RESULTS_FILE#${GITHUB_WORKSPACE}/}"
+    SARIF_PATH="${SARIF_RESULTS_FILE#"${GITHUB_WORKSPACE}"/}"
     echo "SARIF file available: ${SARIF_RESULTS_FILE} (container path)"
     echo "SARIF file host path: ${SARIF_PATH}"
     echo "::debug::Container GITHUB_WORKSPACE: ${GITHUB_WORKSPACE}"
@@ -376,33 +380,35 @@ if [[ "${PR_COMMENT}" == "true" ]] && [[ "${GITHUB_EVENT_NAME}" == "pull_request
         # Choose PR commenter based on format preference and available files
         if [[ "${PR_COMMENT_FORMAT}" == "sarif" ]] && [[ -f "${SARIF_RESULTS_FILE}" ]]; then
             echo "Using SARIF-based PR commenter for enhanced formatting"
-            python3 /action/src/github/sarif_pr_commenter.py \
+            if python3 /action/src/github/sarif_pr_commenter.py \
                 "${SARIF_RESULTS_FILE}" \
                 "${GITHUB_WORKSPACE}" \
                 "${GITHUB_TOKEN}" \
                 "${GITHUB_REPOSITORY}" \
                 "${PR_NUMBER}" \
                 "${GITHUB_SHA}" \
-                "${PR_COMMENT_MODE}"
+                "${PR_COMMENT_MODE}"; then
+                echo "✅ Successfully added PR comments for security findings"
+            else
+                echo "⚠️ Failed to add some PR comments, but continuing..."
+            fi
         elif [[ -f "${JSON_RESULTS_FILE}" ]]; then
             echo "Using JSON-based PR commenter"
-            python3 /action/src/github/pr_commenter.py \
+            if python3 /action/src/github/pr_commenter.py \
                 "${JSON_RESULTS_FILE}" \
                 "${GITHUB_WORKSPACE}" \
                 "${GITHUB_TOKEN}" \
                 "${GITHUB_REPOSITORY}" \
                 "${PR_NUMBER}" \
                 "${GITHUB_SHA}" \
-                "${PR_COMMENT_MODE}"
+                "${PR_COMMENT_MODE}"; then
+                echo "✅ Successfully added PR comments for security findings"
+            else
+                echo "⚠️ Failed to add some PR comments, but continuing..."
+            fi
         else
             echo "⚠️ No suitable results file found for PR commenting"
             exit 1
-        fi
-
-        if [[ $? -eq 0 ]]; then
-            echo "✅ Successfully added PR comments for security findings"
-        else
-            echo "⚠️ Failed to add some PR comments, but continuing..."
         fi
     else
         echo "⚠️ Could not determine PR number from GITHUB_REF: ${GITHUB_REF}"
@@ -421,18 +427,20 @@ if [[ -n "${GITHUB_OUTPUT}" ]]; then
     mkdir -p "$(dirname "${GITHUB_OUTPUT}")"
 
     # Convert container paths to host paths for GitHub Actions
-    RESULTS_HOST_PATH="${RESULTS_FILE#${GITHUB_WORKSPACE}/}"
+    RESULTS_HOST_PATH="${RESULTS_FILE#"${GITHUB_WORKSPACE}"/}"
 
-    echo "scan-results-path=${RESULTS_HOST_PATH}" >> "${GITHUB_OUTPUT}"
-    echo "findings-count=${TOTAL_FINDINGS}" >> "${GITHUB_OUTPUT}"
-    echo "critical-findings=${CRITICAL_FINDINGS}" >> "${GITHUB_OUTPUT}"
-    echo "high-findings=${HIGH_FINDINGS}" >> "${GITHUB_OUTPUT}"
-    echo "medium-findings=${MEDIUM_FINDINGS}" >> "${GITHUB_OUTPUT}"
-    echo "low-findings=${LOW_FINDINGS}" >> "${GITHUB_OUTPUT}"
-    echo "sarif-path=${SARIF_PATH}" >> "${GITHUB_OUTPUT}"
-    echo "sarif-id=${SARIF_ID}" >> "${GITHUB_OUTPUT}"
-    echo "scan-duration=${SCAN_DURATION}" >> "${GITHUB_OUTPUT}"
-    echo "tools-executed=${TOOLS_EXECUTED}" >> "${GITHUB_OUTPUT}"
+    {
+        echo "scan-results-path=${RESULTS_HOST_PATH}"
+        echo "findings-count=${TOTAL_FINDINGS}"
+        echo "critical-findings=${CRITICAL_FINDINGS}"
+        echo "high-findings=${HIGH_FINDINGS}"
+        echo "medium-findings=${MEDIUM_FINDINGS}"
+        echo "low-findings=${LOW_FINDINGS}"
+        echo "sarif-path=${SARIF_PATH}"
+        echo "sarif-id=${SARIF_ID}"
+        echo "scan-duration=${SCAN_DURATION}"
+        echo "tools-executed=${TOOLS_EXECUTED}"
+    } >> "${GITHUB_OUTPUT}"
 
     echo "::debug::GitHub outputs written to: ${GITHUB_OUTPUT}"
     echo "::debug::SARIF path output: ${SARIF_PATH}"
