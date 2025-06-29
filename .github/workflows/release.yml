@@ -252,14 +252,14 @@ jobs:
           tag_name: v${{ needs.validate.outputs.version }}
           name: Release v${{ needs.validate.outputs.version }}
           body_path: release-notes.md
-          prerelease: ${{ needs.validate.outputs.is_prerelease }}
+          prerelease: ${{ needs.validate.outputs.is-prerelease }}
           draft: false
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Update major version tag
-        if: needs.validate.outputs.is_prerelease == 'false'
+        if: needs.validate.outputs.is-prerelease == 'false'
         run: |
           VERSION="${{ needs.validate.outputs.version }}"
           MAJOR_VERSION=$(echo $VERSION | cut -d. -f1)
