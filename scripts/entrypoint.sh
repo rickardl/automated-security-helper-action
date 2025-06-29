@@ -315,6 +315,9 @@ if [[ "${SARIF_OUTPUT}" == "true" ]] && [[ -f "${SARIF_RESULTS_FILE}" ]]; then
     SARIF_PATH="${SARIF_RESULTS_FILE#${GITHUB_WORKSPACE}/}"
     echo "SARIF file available: ${SARIF_RESULTS_FILE} (container path)"
     echo "SARIF file host path: ${SARIF_PATH}"
+    echo "::debug::Container GITHUB_WORKSPACE: ${GITHUB_WORKSPACE}"
+    echo "::debug::Container SARIF_RESULTS_FILE: ${SARIF_RESULTS_FILE}"
+    echo "::debug::Host SARIF_PATH: ${SARIF_PATH}"
     echo "::endgroup::"
 
     # Note: SARIF upload is now handled by the official GitHub upload-sarif action in action.yml
@@ -339,10 +342,10 @@ if [[ "${PR_COMMENT}" == "true" ]] && [[ "${GITHUB_EVENT_NAME}" == "pull_request
         echo "Adding security findings as PR comments (PR #${PR_NUMBER})"
 
         # Choose PR commenter based on format preference and available files
-        if [[ "${PR_COMMENT_FORMAT}" == "sarif" ]] && [[ -f "${SARIF_PATH}" ]]; then
+        if [[ "${PR_COMMENT_FORMAT}" == "sarif" ]] && [[ -f "${SARIF_RESULTS_FILE}" ]]; then
             echo "Using SARIF-based PR commenter for enhanced formatting"
             python3 /action/src/github/sarif_pr_commenter.py \
-                "${SARIF_PATH}" \
+                "${SARIF_RESULTS_FILE}" \
                 "${GITHUB_WORKSPACE}" \
                 "${GITHUB_TOKEN}" \
                 "${GITHUB_REPOSITORY}" \
