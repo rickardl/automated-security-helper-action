@@ -78,6 +78,11 @@ echo "::endgroup::"
 if [[ "${DEBUG}" == "true" ]]; then
     set -x
     echo "::debug::ASH GitHub Action starting with parameters:"
+    echo "::debug::All parameters: $*"
+    echo "::debug::Parameter count: $#"
+    for i in $(seq 1 $#); do
+        echo "::debug::Param $i: ${!i}"
+    done
     echo "::debug::Source Directory: ${SOURCE_DIR}"
     echo "::debug::Output Directory: ${OUTPUT_DIR}"
     echo "::debug::Output Format: ${OUTPUT_FORMAT}"
@@ -145,6 +150,8 @@ fi
 # Handle output format - ASH v3 uses --output-formats
 if [[ "${OUTPUT_FORMAT}" == "json" ]]; then
     ASH_ARGS+=("--output-formats" "flat-json")
+elif [[ "${OUTPUT_FORMAT}" == "sarif" ]]; then
+    ASH_ARGS+=("--output-formats" "sarif")
 elif [[ "${OUTPUT_FORMAT}" == "both" ]]; then
     ASH_ARGS+=("--output-formats" "text" "--output-formats" "flat-json")
 else
@@ -152,8 +159,8 @@ else
     ASH_ARGS+=("--output-formats" "text")
 fi
 
-# Add SARIF output format if enabled
-if [[ "${SARIF_OUTPUT}" == "true" ]]; then
+# Add SARIF output format if enabled (in addition to primary format)
+if [[ "${SARIF_OUTPUT}" == "true" ]] && [[ "${OUTPUT_FORMAT}" != "sarif" ]]; then
     ASH_ARGS+=("--output-formats" "sarif")
 fi
 
@@ -388,7 +395,7 @@ if [[ -n "${GITHUB_OUTPUT}" ]]; then
     echo "sarif-id=${SARIF_ID}" >> "${GITHUB_OUTPUT}"
     echo "scan-duration=${SCAN_DURATION}" >> "${GITHUB_OUTPUT}"
     echo "tools-executed=${TOOLS_EXECUTED}" >> "${GITHUB_OUTPUT}"
-    
+
     echo "::debug::GitHub outputs written to: ${GITHUB_OUTPUT}"
     echo "::debug::SARIF path output: ${SARIF_PATH}"
 fi

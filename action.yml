@@ -94,7 +94,7 @@ inputs:
   ash-mode:
     description: 'ASH execution mode: local, container, or precommit (v3 feature)'
     required: false
-    default: 'container'
+    default: 'local'
   custom-config:
     description: 'Path to custom ASH configuration file'
     required: false
