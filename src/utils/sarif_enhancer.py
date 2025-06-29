@@ -593,16 +593,28 @@ def get_security_severity_score(rule_id: str) -> str:
     return "5.0"
 
 
-def add_partial_fingerprints(run: Dict[str, Any]) -> None:
+def add_partial_fingerprints(run: Dict[str, Any], skip_if_exist: bool = True) -> None:
     """
     Add partial fingerprints to results for better GitHub alert tracking.
 
     Args:
         run: SARIF run object to enhance
+        skip_if_exist: If True, skip fingerprint generation if any results already have fingerprints
     """
-    # Note: Future versions could use source_dir for file-based fingerprinting
     if "results" not in run:
         return
+
+    # Check if any results already have fingerprints
+    if skip_if_exist:
+        has_existing_fingerprints = any(
+            "partialFingerprints" in result for result in run["results"]
+        )
+        if has_existing_fingerprints:
+            print(
+                "Info: Skipping fingerprint generation - results already have fingerprints",
+                file=sys.stderr,
+            )
+            return
 
     for result in run["results"]:
         if "partialFingerprints" in result:
@@ -619,12 +631,27 @@ def add_partial_fingerprints(run: Dict[str, Any]) -> None:
         region = physical_location.get("region", {})
 
         uri = artifact_location.get("uri", "")
-        start_line = region.get("startLine", 1)
+
+        # Get line number with more robust handling
+        start_line = region.get("startLine")
+        if start_line is None:
+            # Skip fingerprinting if we can't determine the line number
+            print(
+                f"Warning: No startLine found for result in {uri}, skipping fingerprint",
+                file=sys.stderr,
+            )
+            continue
+
         start_column = region.get("startColumn", 1)
 
-        # Create a primary location hash
-        location_string = f"{uri}:{start_line}:{start_column}"
-        location_hash = hashlib.sha256(location_string.encode("utf-8")).hexdigest()[:16]
+        # Create a stable primary location hash using file path and line
+        # Use a simpler approach that's more likely to be compatible
+        location_context = f"{uri}:{start_line}"
+
+        # Use a deterministic hash for consistent fingerprints
+        location_hash = hashlib.sha256(location_context.encode("utf-8")).hexdigest()[
+            :16
+        ]
 
         # Add rule and message context for better uniqueness
         rule_id = result.get("ruleId", "unknown")
@@ -738,6 +765,7 @@ def enhance_sarif_with_file_coverage(
     output_path: Optional[str] = None,
     scanned_files_list: Optional[str] = None,
     category: Optional[str] = None,
+    skip_fingerprints: bool = False,
 ) -> int:
     """
     Enhance ASH SARIF output with comprehensive file coverage and GitHub optimization.
@@ -749,6 +777,7 @@ def enhance_sarif_with_file_coverage(
         scanned_files_list: Optional path to ASH's scanned files list
                            (defaults to heuristic discovery)
         category: Optional category for runAutomationDetails (defaults to 'ash-security-scan')
+        skip_fingerprints: If True, skip fingerprint generation entirely
 
     Returns:
         Number of files that were analyzed
@@ -796,7 +825,8 @@ def enhance_sarif_with_file_coverage(
         add_run_automation_details(run, category)
         enhance_tool_metadata(run)
         enhance_rules_metadata(run)
-        add_partial_fingerprints(run)
+        if not skip_fingerprints:
+            add_partial_fingerprints(run, skip_if_exist=True)
         normalize_result_levels(run)
 
     # Validate against GitHub limits
